@@ -1746,6 +1746,11 @@
                     <i class="fa-solid fa-trash-can"></i>清除存档重置
                 </button>
 
+                <!-- 数据分享与存档 -->
+                <button class="nav-footer-btn" style="margin-bottom: 0.6rem; background: rgba(0, 240, 255, 0.04); border: 1px solid rgba(0, 240, 255, 0.25); color: #22d3ee; width: 100%; outline: none;" onclick="openShareModal()">
+                    <i class="fa-solid fa-share-nodes"></i>数据分享与存档
+                </button>
+
                 <!-- 返回主页按钮 -->
                 <a href="index.html" class="nav-footer-btn">
                     <i class="fa-solid fa-circle-arrow-left"></i>返回官网首页
@@ -2171,6 +2176,62 @@
         </div>
     </div>
 
+    <!-- 8. 数据分享与存档弹窗 (Custom Share & Save Overlay) -->
+    <div id="share-modal" class="modal-overlay">
+        <div class="event-card glass-card" style="max-width: 520px; border-color: rgba(0, 240, 255, 0.3); box-shadow: 0 25px 50px rgba(0,0,0,0.7), 0 0 25px rgba(0,240,255,0.15);">
+            <h3 class="event-title" style="color: var(--accent-neon);"><i class="fa-solid fa-share-nodes"></i> 数据分享与存档</h3>
+            
+            <!-- Tab 切换 -->
+            <div class="research-tabs" style="margin-bottom: 0.5rem; display: flex; flex-wrap: nowrap; overflow-x: auto;">
+                <button class="tab-link active" id="tab-share-achievement" style="flex-shrink: 0;" onclick="switchShareTab('achievement')">🏆 成就分享</button>
+                <button class="tab-link" id="tab-share-save" style="flex-shrink: 0;" onclick="switchShareTab('save')">💾 存档传输</button>
+            </div>
+            
+            <!-- 成就分享面板 -->
+            <div id="share-panel-achievement" class="share-tab-content">
+                <p class="event-desc" style="font-size: 0.88rem; margin-bottom: 0.8rem;">您可以复制下方的专属【工作室成就卡片】，分享给您的好友：</p>
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 1rem; font-size: 0.9rem; line-height: 1.6; color: var(--text-primary); text-align: left; min-height: 100px; white-space: pre-wrap; margin-bottom: 1.25rem;" id="share-achievement-text">
+                    正在读取当前进度...
+                </div>
+                <button class="btn-modal-close" style="width: 100%;" onclick="copyAchievementCard()">
+                    一键复制成就卡片
+                </button>
+            </div>
+            
+            <!-- 存档传输面板 -->
+            <div id="share-panel-save" class="share-tab-content" style="display: none;">
+                <p class="event-desc" style="font-size: 0.85rem; margin-bottom: 0.8rem; line-height: 1.4;">
+                    <strong>导出</strong>：生成您当前的 Base64 编码存档码以实现数据跨设备传输；<br>
+                    <strong>导入</strong>：粘贴存档码即可覆盖本地数据并自动载入新进度。
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-bottom: 1.25rem;">
+                    <!-- 导出 -->
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--accent-neon); font-weight: 700; display: block; margin-bottom: 0.4rem;">【导出】当前设备存档码：</span>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <textarea id="share-export-code" readonly style="flex: 1; height: 50px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-secondary); font-family: monospace; font-size: 0.75rem; padding: 0.4rem; resize: none; outline: none; word-break: break-all;"></textarea>
+                            <button class="btn-research" style="height: 50px; padding: 0 1rem; font-size: 0.85rem;" onclick="copyExportSaveCode()">复制</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 导入 -->
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--accent-pink); font-weight: 700; display: block; margin-bottom: 0.4rem;">【导入】输入外部存档码：</span>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <textarea id="share-import-code" placeholder="请在此处粘贴导出的存档码..." style="flex: 1; height: 50px; background: rgba(0,0,0,0.4); border: 1px solid rgba(217,70,239,0.25); border-radius: 8px; color: #fff; font-family: monospace; font-size: 0.75rem; padding: 0.4rem; resize: none; outline: none; word-break: break-all;"></textarea>
+                            <button class="btn-research" style="height: 50px; padding: 0 1rem; font-size: 0.85rem; border-color: var(--accent-pink); color: var(--accent-pink);" onclick="importSaveCode()">导入</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn-modal-close" style="width: 100%; background: transparent; border: 1px solid rgba(255,255,255,0.15); color: var(--text-secondary); margin-top: 0.5rem;" onclick="closeShareModal()">
+                关闭窗口
+            </button>
+        </div>
+    </div>
+
     <!-- ==========================================================================
        5. 游戏Tycoon引擎逻辑 (Simulator Engine Script)
        ========================================================================== -->
@@ -2421,7 +2482,7 @@
         };
 
         function isGamePaused() {
-            const modals = ["custom-alert-modal", "custom-confirm-modal", "review-modal", "event-modal", "publisher-modal", "bankruptcy-modal", "medal-shop-modal"];
+            const modals = ["custom-alert-modal", "custom-confirm-modal", "share-modal", "review-modal", "event-modal", "publisher-modal", "bankruptcy-modal", "medal-shop-modal"];
             return modals.some(id => {
                 const el = document.getElementById(id);
                 return el && el.classList.contains("active");
@@ -3596,6 +3657,157 @@
                 localStorage.removeItem("orange_medals");
                 await alert("已成功清除本地所有数据！页面即将刷新重新开始。");
                 window.location.reload();
+            }
+        }
+
+        // ==========================================================================
+        // 数据分享与存档导入/导出逻辑
+        // ==========================================================================
+        function openShareModal() {
+            if (typeof playSFX === "function") {
+                playSFX("click");
+            }
+            
+            // 编译成就分享卡片文本
+            const achievementText = `🏆 【${gameState.companyName}】独立创业战绩卡 🏆
+──────────────────────────────
+🍊 游戏：《桔子创业模拟器》
+📅 创业年份：第 ${gameState.date.year} 年 ${gameState.date.month} 月第 ${gameState.date.week} 周
+💰 当前资金：¥${Math.round(gameState.funds).toLocaleString()}
+👥 拥有粉丝：${gameState.fans.toLocaleString()} 人
+💡 研发实力 (RP)：${gameState.rp}
+🎮 独立游戏发行总量：${gameState.releases.length} 款
+🏅 累积获得【桔子勋章】：${orangeMedalsCount} 枚
+──────────────────────────────
+快来与我一决高下，开启您的橙色独立游戏帝国之旅吧！`;
+            
+            document.getElementById("share-achievement-text").innerText = achievementText;
+            
+            // 生成存档 Base64 编码数据
+            try {
+                const saveData = {
+                    save: gameState,
+                    medals: orangeMedalsCount
+                };
+                const jsonStr = JSON.stringify(saveData);
+                const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+                document.getElementById("share-export-code").value = base64;
+            } catch (err) {
+                console.error("存档码生成失败", err);
+                document.getElementById("share-export-code").value = "存档码生成失败，请重试";
+            }
+            
+            // 清空导入输入框
+            document.getElementById("share-import-code").value = "";
+            
+            // 默认切回成就分享标签
+            switchShareTab("achievement");
+            
+            // 打开模态框
+            document.getElementById("share-modal").classList.add("active");
+        }
+
+        function closeShareModal() {
+            if (typeof playSFX === "function") {
+                playSFX("click");
+            }
+            document.getElementById("share-modal").classList.remove("active");
+        }
+
+        function switchShareTab(tab) {
+            if (typeof playSFX === "function") {
+                playSFX("click");
+            }
+            
+            const tabAchievementBtn = document.getElementById("tab-share-achievement");
+            const tabSaveBtn = document.getElementById("tab-share-save");
+            const panelAchievement = document.getElementById("share-panel-achievement");
+            const panelSave = document.getElementById("share-panel-save");
+            
+            if (tab === "achievement") {
+                tabAchievementBtn.classList.add("active");
+                tabSaveBtn.classList.remove("active");
+                panelAchievement.style.display = "block";
+                panelSave.style.display = "none";
+            } else {
+                tabAchievementBtn.classList.remove("active");
+                tabSaveBtn.classList.add("active");
+                panelAchievement.style.display = "none";
+                panelSave.style.display = "block";
+            }
+        }
+
+        function copyAchievementCard() {
+            const text = document.getElementById("share-achievement-text").innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                if (typeof playSFX === "function") playSFX("success");
+                spawnFloatingText("成就已复制！", "tab-share-achievement", "up");
+            }).catch(err => {
+                // 回退方案
+                const textarea = document.createElement("textarea");
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+                if (typeof playSFX === "function") playSFX("success");
+                spawnFloatingText("成就已复制！", "tab-share-achievement", "up");
+            });
+        }
+
+        function copyExportSaveCode() {
+            const text = document.getElementById("share-export-code").value;
+            navigator.clipboard.writeText(text).then(() => {
+                if (typeof playSFX === "function") playSFX("success");
+                spawnFloatingText("存档码已复制！", "tab-share-save", "up");
+            }).catch(err => {
+                // 回退方案
+                const textarea = document.createElement("textarea");
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+                if (typeof playSFX === "function") playSFX("success");
+                spawnFloatingText("存档码已复制！", "tab-share-save", "up");
+            });
+        }
+
+        async function importSaveCode() {
+            const base64 = document.getElementById("share-import-code").value.trim();
+            if (!base64) {
+                alert("请先粘贴存档码！", "系统提示");
+                return;
+            }
+            
+            try {
+                // 解码 Base64 并反序列化
+                const jsonStr = decodeURIComponent(escape(atob(base64)));
+                const parsed = JSON.parse(jsonStr);
+                
+                // 数据完整性验证
+                if (!parsed || typeof parsed !== "object" || !parsed.save || parsed.medals === undefined) {
+                    throw new Error("格式不完整");
+                }
+                
+                const save = parsed.save;
+                if (!save.companyName || save.funds === undefined || !Array.isArray(save.employees) || save.date === undefined) {
+                    throw new Error("字段缺失");
+                }
+                
+                // 二次确认覆盖
+                const confirmOk = await confirm("⚠️ 警告：导入此存档码会彻底覆盖您当前的单局进度及积累的全部勋章！\n\n您确定要覆盖数据并载入此存档吗？");
+                if (confirmOk) {
+                    localStorage.setItem("hoshikuzu_tycoon_save", JSON.stringify(save));
+                    localStorage.setItem("orange_medals", parsed.medals.toString());
+                    closeShareModal();
+                    await alert("🎉 存档导入成功！页面即将重载载入新进度。");
+                    window.location.reload();
+                }
+            } catch (err) {
+                if (typeof playSFX === "function") playSFX("bug");
+                alert("⚠️ 导入失败：存档码无效、已损坏或数据字段不兼容！", "系统提示");
+                console.error("导入存档失败", err);
             }
         }
 
