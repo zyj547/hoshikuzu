@@ -98,10 +98,197 @@ function migrateSave(parsed) {
     return fillDefaults(parsed, createDefaultGameState());
 }
 
+// 存档校验与清洗：外部导入 / localStorage 读取都必须走这里，避免异常字段污染运行态
+const SAVE_LIMITS = {
+    text: 80,
+    chronologyText: 240,
+    chronology: 100,
+    employees: 5,
+    releases: 80,
+    stat: 999,
+    funds: 999999999,
+    fans: 999999999,
+    rp: 999999
+};
+
+const VALID_ROLES = ["designer", "programmer", "artist"];
+const VALID_SPECIALTIES = ["engine", "fullstack", "concept", "animator", "systems", "writer"];
+const VALID_PROJECT_STATES = ["coding", "debugging", "finished"];
+const VALID_PUBLISHERS = ["self", "tiktok", "steam"];
+
+function clonePlain(value) {
+    return JSON.parse(JSON.stringify(value));
+}
+
+function clampNumber(value, min, max, fallback = min) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return fallback;
+    return Math.min(max, Math.max(min, num));
+}
+
+function clampInteger(value, min, max, fallback = min) {
+    return Math.round(clampNumber(value, min, max, fallback));
+}
+
+function cleanText(value, fallback = "", maxLength = SAVE_LIMITS.text) {
+    const text = String(value == null ? fallback : value).replace(/[\u0000-\u001f\u007f]/g, "").trim();
+    return text.slice(0, maxLength) || fallback;
+}
+
+function enumValue(value, allowed, fallback) {
+    return allowed.includes(value) ? value : fallback;
+}
+
+function uniqueValidList(values, validKeys, requiredFirst) {
+    const out = [];
+    if (requiredFirst && validKeys.includes(requiredFirst)) out.push(requiredFirst);
+    if (Array.isArray(values)) {
+        values.forEach(value => {
+            if (validKeys.includes(value) && !out.includes(value)) {
+                out.push(value);
+            }
+        });
+    }
+    return out;
+}
+
+function sanitizeStats(stats) {
+    return {
+        code: clampInteger(stats && stats.code, 0, SAVE_LIMITS.stat, 0),
+        art: clampInteger(stats && stats.art, 0, SAVE_LIMITS.stat, 0),
+        design: clampInteger(stats && stats.design, 0, SAVE_LIMITS.stat, 0)
+    };
+}
+
+function sanitizeEmployee(emp, fallback) {
+    const source = emp && typeof emp === "object" ? emp : fallback;
+    const clean = {
+        id: cleanText(source.id || "", "", 40),
+        name: cleanText(source.name, fallback.name, SAVE_LIMITS.text),
+        role: enumValue(source.role, VALID_ROLES, fallback.role),
+        stats: sanitizeStats(source.stats || fallback.stats),
+        salary: clampInteger(source.salary, 0, 9999999, fallback.salary || 0),
+        level: clampInteger(source.level, 1, 99, fallback.level || 1),
+        xp: clampInteger(source.xp, 0, 999999, fallback.xp || 0),
+        trait: enumValue(source.trait, Object.keys(EMPLOYEE_TRAITS), fallback.trait || "none")
+    };
+    if (VALID_SPECIALTIES.includes(source.specialty)) {
+        clean.specialty = source.specialty;
+    }
+    return clean;
+}
+
+function sanitizeProject(project) {
+    if (!project || typeof project !== "object") return null;
+    const platform = enumValue(project.platform, Object.keys(PLATFORMS_DATA), "Mobile");
+    const genre = enumValue(project.genre, Object.keys(GENRES_DATA), "Casual");
+    const topic = enumValue(project.topic, Object.keys(TOPICS_DATA), "Laborer");
+    return {
+        name: cleanText(project.name, "未命名项目", SAVE_LIMITS.text),
+        platform,
+        genre,
+        topic,
+        progress: clampNumber(project.progress, 0, 100, 0),
+        code: clampInteger(project.code, 0, 99999, 0),
+        art: clampInteger(project.art, 0, 99999, 0),
+        design: clampInteger(project.design, 0, 99999, 0),
+        bugs: clampInteger(project.bugs, 0, 9999, 0),
+        state: enumValue(project.state, VALID_PROJECT_STATES, "coding")
+    };
+}
+
+function sanitizeRelease(release) {
+    if (!release || typeof release !== "object") return null;
+    const platform = enumValue(release.platform, Object.keys(PLATFORMS_DATA), "Mobile");
+    const genre = enumValue(release.genre, Object.keys(GENRES_DATA), "Casual");
+    const topic = enumValue(release.topic, Object.keys(TOPICS_DATA), "Laborer");
+    return {
+        name: cleanText(release.name, "未命名游戏", SAVE_LIMITS.text),
+        platform,
+        genre,
+        topic,
+        rating: clampNumber(release.rating, 0, 10, 5),
+        weeksSinceRelease: clampInteger(release.weeksSinceRelease, 0, BALANCE.salesWindowWeeks, 0),
+        revenueGenerated: clampInteger(release.revenueGenerated, 0, SAVE_LIMITS.funds, 0),
+        publisher: enumValue(release.publisher, VALID_PUBLISHERS, "self"),
+        fansGained: clampInteger(release.fansGained, 0, SAVE_LIMITS.fans, 0)
+    };
+}
+
+function sanitizePerks(perks) {
+    return {
+        fundsBoost: Boolean(perks && perks.fundsBoost),
+        roguelikeUnlocked: Boolean(perks && perks.roguelikeUnlocked),
+        fansGrowthBoost: Boolean(perks && perks.fansGrowthBoost)
+    };
+}
+
+function sanitizeDate(date) {
+    return {
+        year: clampInteger(date && date.year, 1, 999, 1),
+        month: clampInteger(date && date.month, 1, 12, 1),
+        week: clampInteger(date && date.week, 1, 4, 1)
+    };
+}
+
+function sanitizeChronology(entries) {
+    if (!Array.isArray(entries)) return [];
+    return entries.slice(-SAVE_LIMITS.chronology).map(entry => ({
+        date: cleanText(entry && entry.date, "未知时间", SAVE_LIMITS.text),
+        text: cleanText(entry && entry.text, "", SAVE_LIMITS.chronologyText)
+    })).filter(entry => entry.text);
+}
+
+function sanitizeMedalCount(value) {
+    return clampInteger(value, 0, 999999, 0);
+}
+
+function sanitizeSave(rawSave) {
+    if (!rawSave || typeof rawSave !== "object" || Array.isArray(rawSave)) {
+        throw new Error("存档不是对象");
+    }
+
+    const defaults = createDefaultGameState();
+    const migrated = migrateSave(clonePlain(rawSave));
+    const clean = createDefaultGameState();
+
+    clean.companyName = cleanText(migrated.companyName, defaults.companyName, SAVE_LIMITS.text);
+    clean.funds = clampInteger(migrated.funds, -SAVE_LIMITS.funds, SAVE_LIMITS.funds, defaults.funds);
+    clean.fans = clampInteger(migrated.fans, 0, SAVE_LIMITS.fans, defaults.fans);
+    clean.rp = clampInteger(migrated.rp, 0, SAVE_LIMITS.rp, defaults.rp);
+    clean.date = sanitizeDate(migrated.date);
+    clean.employees = (Array.isArray(migrated.employees) ? migrated.employees : defaults.employees)
+        .slice(0, SAVE_LIMITS.employees)
+        .map((emp, idx) => sanitizeEmployee(emp, defaults.employees[idx] || defaults.employees[0]));
+    if (clean.employees.length === 0) {
+        clean.employees = defaults.employees.map(emp => sanitizeEmployee(emp, emp));
+    }
+    clean.unlockedGenres = uniqueValidList(migrated.unlockedGenres, Object.keys(GENRES_DATA), "Casual");
+    clean.unlockedTopics = uniqueValidList(migrated.unlockedTopics, Object.keys(TOPICS_DATA), "Laborer");
+    clean.unlockedPlatforms = uniqueValidList(migrated.unlockedPlatforms, Object.keys(PLATFORMS_DATA), "Mobile");
+    clean.releases = (Array.isArray(migrated.releases) ? migrated.releases : [])
+        .slice(0, SAVE_LIMITS.releases)
+        .map(sanitizeRelease)
+        .filter(Boolean);
+    clean.currentProject = sanitizeProject(migrated.currentProject);
+    clean.lastIncome = clampInteger(migrated.lastIncome, -SAVE_LIMITS.funds, SAVE_LIMITS.funds, 0);
+    clean.lastSales = clampInteger(migrated.lastSales, 0, SAVE_LIMITS.funds, 0);
+    clean.activeTrend = {
+        genre: enumValue(migrated.activeTrend && migrated.activeTrend.genre, Object.keys(GENRES_DATA), "Casual"),
+        topic: enumValue(migrated.activeTrend && migrated.activeTrend.topic, Object.keys(TOPICS_DATA), "Laborer")
+    };
+    clean.medalsGained = sanitizeMedalCount(migrated.medalsGained);
+    clean.activePerks = sanitizePerks(migrated.activePerks);
+    clean.chronology = sanitizeChronology(migrated.chronology);
+    clean.saveVersion = SAVE_VERSION;
+
+    return clean;
+}
+
 let gameState = createDefaultGameState();
 
 // 跨周目勋章与特权持久化变量
-let orangeMedalsCount = parseInt(localStorage.getItem("orange_medals") || "0");
+let orangeMedalsCount = sanitizeMedalCount(localStorage.getItem("orange_medals") || "0");
 let shopSelectedPerks = { fundsBoost: false, roguelikeUnlocked: false, fansGrowthBoost: false };
 
 // 临时招聘池

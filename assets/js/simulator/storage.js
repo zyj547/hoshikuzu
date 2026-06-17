@@ -20,25 +20,24 @@ function saveGame() {
 }
 
 function loadGame() {
-    // 解析一份存档原文，校验关键字段；无效返回 null
+    // 解析一份存档原文，迁移并清洗到当前结构；无效返回 null
     const parseSave = (raw) => {
         if (!raw) return null;
         const parsed = JSON.parse(raw);
-        return (parsed && parsed.companyName) ? parsed : null;
+        return sanitizeSave(parsed);
     };
 
     try {
-        const parsed = parseSave(localStorage.getItem(SAVE_KEY));
-        if (parsed) {
-            // 用默认结构补全任意旧版本存档的缺失字段，统一兜底兼容
-            gameState = migrateSave(parsed);
+        const save = parseSave(localStorage.getItem(SAVE_KEY));
+        if (save) {
+            gameState = save;
         }
     } catch (e) {
         console.error("主存档损坏，尝试回滚到备份", e);
         try {
             const backup = parseSave(localStorage.getItem(SAVE_BACKUP_KEY));
             if (backup) {
-                gameState = migrateSave(backup);
+                gameState = backup;
                 console.warn("已从备份存档恢复");
             }
         } catch (e2) {

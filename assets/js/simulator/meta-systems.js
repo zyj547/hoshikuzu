@@ -184,16 +184,14 @@ async function importSaveCode() {
             throw new Error("格式不完整");
         }
         
-        const save = parsed.save;
-        if (!save.companyName || save.funds === undefined || !Array.isArray(save.employees) || save.date === undefined) {
-            throw new Error("字段缺失");
-        }
+        const save = sanitizeSave(parsed.save);
+        const medals = sanitizeMedalCount(parsed.medals);
         
         // 二次确认覆盖
         const confirmOk = await confirm("⚠️ 警告：导入此存档码会彻底覆盖您当前的单局进度及积累的全部勋章！\n\n您确定要覆盖数据并载入此存档吗？");
         if (confirmOk) {
-            localStorage.setItem("hoshikuzu_tycoon_save", JSON.stringify(save));
-            localStorage.setItem("orange_medals", parsed.medals.toString());
+            localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+            localStorage.setItem("orange_medals", medals.toString());
             closeShareModal();
             await alert("🎉 存档导入成功！页面即将重载载入新进度。");
             window.location.reload();
