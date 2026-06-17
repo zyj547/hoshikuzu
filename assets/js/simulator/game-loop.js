@@ -49,14 +49,24 @@ function gameTick() {
         gameState.fans += BALANCE.fansBoostPerWeek;
     }
 
+    if (gameState.researchPerks && gameState.researchPerks.community) {
+        gameState.fans += 8;
+    }
+
     // 闲置状态下员工积累研发点 (RP)
     if (!gameState.currentProject) {
         gameState.employees.forEach(emp => {
+            emp.fatigue = Math.max(0, (emp.fatigue || 0) - 8);
+            emp.morale = Math.min(100, (emp.morale == null ? 75 : emp.morale) + 2);
             // 每个人闲置时有几率积累 RP
-            if (Math.random() < BALANCE.idleRpChance) {
+            const rpChance = BALANCE.idleRpChance + (gameState.researchPerks && gameState.researchPerks.analytics ? 0.08 : 0);
+            if (Math.random() < rpChance) {
                 let rpGained = emp.level * (Math.random() > 0.5 ? 1 : 2);
                 if (emp.trait === "idea") {
                     rpGained = Math.round(rpGained * BALANCE.ideaTraitMultiplier); // 灵感爆棚特质
+                }
+                if (gameState.researchPerks && gameState.researchPerks.analytics) {
+                    rpGained += 1;
                 }
                 gameState.rp += rpGained;
             }

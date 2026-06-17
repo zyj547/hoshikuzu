@@ -1,44 +1,80 @@
 ﻿// ==========================================================================
 // 招募雇员模块
 // ==========================================================================
-function generateHiringPool() {
+const HIRING_RARITIES = {
+    R: { name: "R", label: "潜力新人", multiplier: 1.0, level: 1, salaryMultiplier: 1.0, costMultiplier: 1.0, color: "var(--accent-neon)" },
+    SR: { name: "SR", label: "资深骨干", multiplier: 1.45, level: 3, salaryMultiplier: 1.45, costMultiplier: 1.7, color: "var(--accent-pink)" },
+    SSR: { name: "SSR", label: "行业王牌", multiplier: 2.15, level: 5, salaryMultiplier: 2.2, costMultiplier: 3.2, color: "var(--accent-yellow)" }
+};
+
+function rollHiringRarity(forceSSR = false) {
+    if (forceSSR) return "SSR";
+    const roll = Math.random();
+    if (roll < 0.12) return "SSR";
+    if (roll < 0.42) return "SR";
+    return "R";
+}
+
+function getHiringRefreshCost() {
+    const year = gameState && gameState.date ? gameState.date.year : 1;
+    return 1800 + Math.max(0, year - 1) * 600;
+}
+
+function getSsrPityRemaining() {
+    return 8 - ((gameState.hiringRefreshes || 0) % 8);
+}
+
+function generateCandidate(role, rarityKey) {
+    const rarity = HIRING_RARITIES[rarityKey];
+    const rName = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)] + (Math.random() > 0.5 ? "姐" : "哥");
+    const seed = Math.random();
+    const variance = rarityKey === "SSR" ? 1.18 : rarityKey === "SR" ? 1.08 : 1.0;
+    const code = Math.round((role === "programmer" ? 25 + seed * 30 : 5 + seed * 15) * rarity.multiplier * variance);
+    const art = Math.round((role === "artist" ? 28 + seed * 28 : 5 + seed * 15) * rarity.multiplier * variance);
+    const design = Math.round((role === "designer" ? 26 + seed * 30 : 8 + seed * 12) * rarity.multiplier * variance);
+
+    let salary = Math.round((code + art + design) * 22 * rarity.salaryMultiplier + 500);
+    const cost = Math.round(salary * 2 * rarity.costMultiplier);
+    const traitKeys = Object.keys(EMPLOYEE_TRAITS);
+    const traitChance = rarityKey === "SSR" ? 0.9 : rarityKey === "SR" ? 0.7 : 0.65;
+    const randomTrait = Math.random() < traitChance ? traitKeys[Math.floor(Math.random() * (traitKeys.length - 1)) + 1] : "none";
+
+    if (randomTrait === "salary") {
+        salary = salary * 2;
+    }
+
+    return {
+        name: rName,
+        role,
+        stats: { code, art, design },
+        salary,
+        cost,
+        level: rarity.level,
+        trait: randomTrait,
+        rarity: rarityKey
+    };
+}
+
+function updateHiringMarketUI() {
+    const costEl = document.getElementById("staff-refresh-cost");
+    if (costEl) costEl.innerText = `¥${getHiringRefreshCost().toLocaleString()}`;
+    const pityEl = document.getElementById("staff-ssr-pity");
+    if (pityEl) pityEl.innerText = `${getSsrPityRemaining()} 次内必出 SSR`;
+}
+
+function generateHiringPool(forceSSR = false) {
     hiringPool = [];
     const roles = ["designer", "programmer", "artist"];
     
-    for (let i = 0; i < 3; i++) {
-        const role = roles[i];
-        const rName = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)] + (Math.random() > 0.5 ? "姐" : "哥");
-        
-        // 属性浮动
-        const seed = Math.random();
-        const code = Math.round(role === "programmer" ? 25 + seed * 30 : 5 + seed * 15);
-        const art = Math.round(role === "artist" ? 28 + seed * 28 : 5 + seed * 15);
-        const design = Math.round(role === "designer" ? 26 + seed * 30 : 8 + seed * 12);
-        
-        let salary = Math.round((code + art + design) * 22 + 500);
-        const cost = Math.round(salary * 2); // 招聘费
-
-        // 随机产生员工特质
-        const traitKeys = Object.keys(EMPLOYEE_TRAITS);
-        const randomTrait = Math.random() > 0.35 ? traitKeys[Math.floor(Math.random() * (traitKeys.length - 1)) + 1] : "none";
-        
-        if (randomTrait === "salary") {
-            salary = salary * 2; // 薪水杀手双倍周薪
-        }
-
-        hiringPool.push({
-            name: rName,
-            role: role,
-            stats: { code, art, design },
-            salary: salary,
-            cost: cost,
-            level: 1,
-            trait: randomTrait
-        });
+    for (let i = 0; i < 4; i++) {
+        const role = roles[i % roles.length];
+        hiringPool.push(generateCandidate(role, rollHiringRarity(forceSSR && i === 0)));
     }
+    updateHiringMarketUI();
 }
 
 function loadStaffRecruits() {
+    updateHiringMarketUI();
     renderList(document.getElementById("hiring-list"), hiringPool, (cand, idx) => {
         let iconClass = "fa-laptop-code";
         let roleColor = "var(--accent-neon)";
@@ -48,8 +84,11 @@ function loadStaffRecruits() {
 
         const traitObj = EMPLOYEE_TRAITS[cand.trait || "none"];
         const traitHTML = cand.trait && cand.trait !== "none" ? `<span class="trait-badge ${traitObj.badgeClass}" title="${traitObj.desc}">${traitObj.name}</span>` : "";
+        const rarity = HIRING_RARITIES[cand.rarity || "R"];
+        const totalStats = cand.stats.code + cand.stats.art + cand.stats.design;
+        const salaryEfficiency = Math.round(totalStats / Math.max(1, cand.salary / 1000));
 
-        return { className: "candidate-card", html: `
+        return { className: `candidate-card rarity-${cand.rarity || "R"}`, html: `
             <div class="candidate-header">
                 <div class="candidate-info">
                     <div class="staff-avatar ${cand.role}">
@@ -60,6 +99,10 @@ function loadStaffRecruits() {
                         <span class="staff-level" style="color: ${roleColor}">${roleName}</span>
                     </div>
                 </div>
+                <div class="rarity-badge" style="color:${rarity.color}; border-color:${rarity.color};">${rarity.name}</div>
+            </div>
+            <div class="candidate-rarity-line" style="color:${rarity.color};">
+                ${rarity.label} · 入职 Lv.${cand.level}
             </div>
             <div class="candidate-skills">
                 <div class="candidate-skill">
@@ -79,6 +122,10 @@ function loadStaffRecruits() {
                 <span class="list-lbl">期望周薪</span>
                 <span class="candidate-salary">¥${cand.salary}</span>
             </div>
+            <div class="candidate-salary-box">
+                <span class="list-lbl">性价比指数</span>
+                <span class="candidate-salary" style="color: var(--accent-neon);">${salaryEfficiency}</span>
+            </div>
             <button class="btn-hire" onclick="hireCandidate(${idx})">
                 签订雇佣合同 (手续费 ¥${cand.cost})
             </button>
@@ -86,10 +133,29 @@ function loadStaffRecruits() {
     });
 }
 
+function refreshHiringMarket() {
+    const cost = getHiringRefreshCost();
+    if (gameState.funds < cost) {
+        alert(`资金不足！刷新人才市场需要 ¥${cost.toLocaleString()}。`);
+        return;
+    }
+
+    gameState.funds -= cost;
+    gameState.hiringRefreshes = (gameState.hiringRefreshes || 0) + 1;
+    const forceSSR = gameState.hiringRefreshes % 8 === 0;
+    generateHiringPool(forceSSR);
+    addChronicleEntry(`🔎 支付猎头费 ¥${cost.toLocaleString()} 刷新了人才市场${forceSSR ? "，触发 SSR 保底！" : "。"}`);
+    saveGame();
+    updateStatsUI();
+    loadStaffRecruits();
+    playSFX(forceSSR ? "success" : "click");
+}
+
 function hireCandidate(idx) {
     const cand = hiringPool[idx];
-    if (gameState.employees.length >= 5) {
-        alert("当前办公室卡座已满！无法招募新员工（最大 5 人）。");
+    const officeSlots = gameState.officeSlots || 5;
+    if (gameState.employees.length >= officeSlots) {
+        alert(`当前办公室卡座已满！请先扩建工位（当前 ${officeSlots} 个）。`);
         return;
     }
     if (gameState.funds < cand.cost) {
@@ -103,25 +169,91 @@ function hireCandidate(idx) {
         role: cand.role,
         stats: cand.stats,
         salary: cand.salary,
-        level: 1,
+        level: cand.level || 1,
         xp: 0,
-        trait: cand.trait || "none"
+        trait: cand.trait || "none",
+        rarity: cand.rarity || "R",
+        morale: 75,
+        fatigue: 0
     });
 
-    // 移除招募池中的该候选人并重新加载招募列表
+    // 移除招募池中的该候选人，并补一个新候选人保持市场可逛
     hiringPool.splice(idx, 1);
-    generateHiringPool(); // 再次补充
+    while (hiringPool.length < 4) {
+        const roles = ["designer", "programmer", "artist"];
+        hiringPool.push(generateCandidate(roles[Math.floor(Math.random() * roles.length)], rollHiringRarity()));
+    }
+    updateHiringMarketUI();
     saveGame();
     
     let roleName = "程序员";
     if (cand.role === "artist") roleName = "美术师";
     if (cand.role === "designer") roleName = "策划师";
-    addChronicleEntry(`🤝 成功招募候选人【${cand.name}】担任【${roleName}】！`);
+    addChronicleEntry(`🤝 成功招募 ${cand.rarity || "R"} 级候选人【${cand.name}】担任【${roleName}】！`);
 
     updateStatsUI();
     loadStaffRecruits();
     playSFX("click");
     alert(`恭喜！${cand.name} 已成功入职！`);
+}
+
+function getOfficeExpandCost() {
+    const slots = gameState.officeSlots || 5;
+    return 60000 + Math.max(0, slots - 5) * 45000;
+}
+
+function expandOfficeSlots() {
+    const slots = gameState.officeSlots || 5;
+    if (slots >= 8) {
+        alert("当前办公室已经扩建到上限（8 个工位）。");
+        return;
+    }
+
+    const cost = getOfficeExpandCost();
+    if (gameState.funds < cost) {
+        alert(`资金不足！扩建第 ${slots + 1} 个工位需要 ¥${cost.toLocaleString()}。`);
+        return;
+    }
+
+    gameState.funds -= cost;
+    gameState.officeSlots = slots + 1;
+    addChronicleEntry(`🏢 工作室完成扩建，新增 1 个开发工位。当前团队容量 ${gameState.officeSlots}/8。`);
+    saveGame();
+    updateStatsUI();
+    loadOfficeDesks();
+    playSFX("upgrade");
+    alert(`扩建完成！现在可以容纳 ${gameState.officeSlots} 名员工。`);
+}
+
+async function fireEmployee(idx) {
+    const emp = gameState.employees[idx];
+    if (!emp) return;
+    if (idx === 0 || emp.id === "player") {
+        alert("创始人不能开除。");
+        return;
+    }
+    if (gameState.currentProject) {
+        alert("当前项目研发中，暂时不能开除员工。请先完成或发布项目，避免项目数据异常。");
+        return;
+    }
+
+    const severance = Math.max(1000, Math.round(emp.salary * 1.5));
+    if (gameState.funds < severance) {
+        alert(`资金不足以支付离职补偿金 ¥${severance.toLocaleString()}。`);
+        return;
+    }
+    const confirmed = await confirm(`确定开除 ${emp.name} 吗？需要支付离职补偿金 ¥${severance.toLocaleString()}。`);
+    if (!confirmed) {
+        return;
+    }
+
+    gameState.funds -= severance;
+    gameState.employees.splice(idx, 1);
+    addChronicleEntry(`📄 ${emp.name} 离开了工作室，支付离职补偿金 ¥${severance.toLocaleString()}。`);
+    saveGame();
+    updateStatsUI();
+    loadOfficeDesks();
+    playSFX("click");
 }
 
 function trainEmployee(idx) {
@@ -201,24 +333,47 @@ function trainEmployee(idx) {
     alert(msg, "工作室人才升级简报");
 }
 
+function restEmployee(idx) {
+    const emp = gameState.employees[idx];
+    if (!emp) return;
+    const cost = Math.max(800, Math.round(emp.salary * 0.6));
+    if (gameState.funds < cost) {
+        alert("资金不足以安排带薪休整！");
+        return;
+    }
+    gameState.funds -= cost;
+    emp.fatigue = Math.max(0, (emp.fatigue || 0) - 35);
+    emp.morale = Math.min(100, (emp.morale == null ? 75 : emp.morale) + 18);
+    addChronicleEntry(`☕ ${emp.name} 完成一次带薪休整，状态明显回暖。`);
+    saveGame();
+    updateStatsUI();
+    loadOfficeDesks();
+    playSFX("success");
+}
+
 // ==========================================================================
 // 科技研究模块
 // ==========================================================================
 const RESEARCH_DATABASE = {
     genre: {
-        "RPG": { name: "角色扮演 (RPG)", desc: "解锁后可以研发重度硬核角色扮演游戏，盈利上限更高。", cost: 15 },
-        "Roguelike": { name: "地牢冒险 (Roguelike)", desc: "解锁后可以研发随机地牢动作类游戏，极其受核心玩家欢迎。", cost: 25 },
-        "Tycoon": { name: "模拟经营 (Tycoon)", desc: "研发具有深度的策略模拟经营游戏，粉丝增长效率极佳。", cost: 40 }
+        "RPG": { name: "角色扮演 (RPG)", route: "精品路线", desc: "解锁后可以研发重度硬核角色扮演游戏，盈利上限更高。", cost: 15 },
+        "Roguelike": { name: "地牢冒险 (Roguelike)", route: "核心路线", desc: "解锁后可以研发随机地牢动作类游戏，极其受核心玩家欢迎。", cost: 25 },
+        "Tycoon": { name: "模拟经营 (Tycoon)", route: "长线路线", desc: "研发具有深度的策略模拟经营游戏，粉丝增长效率极佳。", cost: 40 }
     },
     topic: {
-        "Space": { name: "科幻深空", desc: "太空歌剧与硬科幻背景，是科幻爱好者的首选主题。", cost: 10 },
-        "Cyberpunk": { name: "赛博都市", desc: "霓虹美学与高科技低生活题材，拥有极强的视觉可塑性。", cost: 20 },
-        "Retro": { name: "像素复古", desc: "老派怀旧风，用最纯粹的游戏玩法打动玩家。", cost: 30 }
+        "Space": { name: "科幻深空", route: "幻想题材", desc: "太空歌剧与硬科幻背景，是科幻爱好者的首选主题。", cost: 10 },
+        "Cyberpunk": { name: "赛博都市", route: "视觉题材", desc: "霓虹美学与高科技低生活题材，拥有极强的视觉可塑性。", cost: 20 },
+        "Retro": { name: "像素复古", route: "怀旧题材", desc: "老派怀旧风，用最纯粹的游戏玩法打动玩家。", cost: 30 }
     },
     platform: {
-        "TikTok": { name: "抖音小游戏生态", desc: "解锁接入抖音推荐算法，大幅提升轻度游戏的销量上限。", cost: 12 },
-        "PC": { name: "Steam商店发行", desc: "发行至全球最大的个人电脑游戏平台，高定价高销量上限。", cost: 28 },
-        "Console": { name: "索尼/任天堂主机端", desc: "进军最重度的家庭娱乐主机阵营，品质要求极苛刻但口碑爆炸。", cost: 50 }
+        "TikTok": { name: "抖音小游戏生态", route: "流量路线", desc: "解锁接入抖音推荐算法，大幅提升轻度游戏的销量上限。", cost: 12 },
+        "PC": { name: "Steam商店发行", route: "全球路线", desc: "发行至全球最大的个人电脑游戏平台，高定价高销量上限。", cost: 28 },
+        "Console": { name: "索尼/任天堂主机端", route: "主机路线", desc: "进军最重度的家庭娱乐主机阵营，品质要求极苛刻但口碑爆炸。", cost: 50 }
+    },
+    perk: {
+        "workflow": { name: "敏捷工作流", route: "管理路线", desc: "建立迭代节奏。研发项目每周进度更稳，员工疲劳增长压力降低。", cost: 18 },
+        "community": { name: "社区运营矩阵", route: "商业路线", desc: "建立粉丝社群。每周自然增长少量粉丝，降低空窗期焦虑。", cost: 22 },
+        "analytics": { name: "数据分析后台", route: "工具路线", desc: "搭建数据看板。闲置员工产出 RP 的概率和稳定性提升。", cost: 26 }
     }
 };
 
@@ -246,18 +401,20 @@ function loadResearchTree() {
         if (activeResearchTab === "genre") isUnlocked = gameState.unlockedGenres.includes(key);
         if (activeResearchTab === "topic") isUnlocked = gameState.unlockedTopics.includes(key);
         if (activeResearchTab === "platform") isUnlocked = gameState.unlockedPlatforms.includes(key);
+        if (activeResearchTab === "perk") isUnlocked = Boolean(gameState.researchPerks && gameState.researchPerks[key]);
 
         const card = document.createElement("div");
         card.className = "research-card";
         card.innerHTML = `
             <div class="research-info">
+                <span class="research-route">${item.route}</span>
                 <span class="research-name">${item.name}</span>
                 <p class="research-desc">${item.desc}</p>
             </div>
             <div class="research-action">
                 <span class="research-cost"><i class="fa-solid fa-lightbulb"></i> ${item.cost} RP</span>
                 <button class="btn-research" ${isUnlocked || gameState.rp < item.cost ? 'disabled' : ''} onclick="researchTech('${key}')">
-                    ${isUnlocked ? '已成功研发' : '启动科技攻关'}
+                    ${isUnlocked ? '已部署生效' : '启动科技攻关'}
                 </button>
             </div>
         `;
@@ -278,6 +435,10 @@ function researchTech(key) {
     if (activeResearchTab === "genre") gameState.unlockedGenres.push(key);
     if (activeResearchTab === "topic") gameState.unlockedTopics.push(key);
     if (activeResearchTab === "platform") gameState.unlockedPlatforms.push(key);
+    if (activeResearchTab === "perk") {
+        if (!gameState.researchPerks) gameState.researchPerks = { workflow: false, community: false, analytics: false };
+        gameState.researchPerks[key] = true;
+    }
 
     saveGame();
     updateStatsUI();

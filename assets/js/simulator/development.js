@@ -50,6 +50,12 @@ function calculateTeamFit(genreKey = selectedGenre) {
     return { fit, totalPower, actual, ratio };
 }
 
+function employeeEfficiency(emp) {
+    const moraleFactor = 0.75 + ((emp.morale == null ? 75 : emp.morale) / 100) * 0.35;
+    const fatiguePenalty = 1 - ((emp.fatigue || 0) / 100) * 0.45;
+    return Math.max(0.35, moraleFactor * fatiguePenalty);
+}
+
 function factorTone(value, goodAt = 1, warnAt = 0.75) {
     if (value >= goodAt) return "good";
     if (value >= warnAt) return "warn";
@@ -172,6 +178,9 @@ function startDevelopment() {
         design: 0,
         bugs: 0,
         devEventCooldown: 2,
+        miniCooldown: 1,
+        miniStreak: 0,
+        miniReady: false,
         state: "coding" // coding, debugging, finished
     };
 
@@ -210,9 +219,15 @@ function updateDevStatsUI() {
 
     const btn = document.getElementById("dev-action-btn");
     if (proj.state === "coding") {
-        btn.className = "btn-dev-action disabled";
-        btn.innerText = "开发中，员工正在输出技术力...";
-        btn.disabled = true;
+        if (proj.miniReady) {
+            btn.className = "btn-dev-action focus";
+            btn.innerText = `灵感火花！点击冲刺 x${(proj.miniStreak || 0) + 1}`;
+            btn.disabled = false;
+        } else {
+            btn.className = "btn-dev-action disabled";
+            btn.innerText = `研发推进中，灵感冷却 ${proj.miniCooldown || 0} 周`;
+            btn.disabled = true;
+        }
     } else if (proj.state === "debugging") {
         btn.className = "btn-dev-action bug-fixing";
         btn.innerText = "开发完成！点击开始测试修复Bug";
@@ -232,12 +247,13 @@ function developProgressTick() {
 
     // 每周根据雇员能力递增点数
     gameState.employees.forEach((emp, index) => {
+        const efficiency = employeeEfficiency(emp);
         // 根据工种产生相对应的点数
         let codeGen = 0, artGen = 0, desGen = 0;
         
         if (emp.role === "programmer") {
-            codeGen = (emp.stats.code * 0.4) + Math.random() * 5;
-            desGen = (emp.stats.design * 0.1);
+            codeGen = ((emp.stats.code * 0.4) + Math.random() * 5) * efficiency;
+            desGen = (emp.stats.design * 0.1) * efficiency;
             
             // 专精：引擎架构师 (engine): 自身代码产出提高 40%
             if (emp.specialty === "engine") {
@@ -249,15 +265,15 @@ function developProgressTick() {
                 desGen += codeGen * 0.30;
             }
         } else if (emp.role === "artist") {
-            artGen = (emp.stats.art * 0.45) + Math.random() * 5;
+            artGen = ((emp.stats.art * 0.45) + Math.random() * 5) * efficiency;
             
             // 专精：原画主美 (concept): 自身美术表现点数产出提高 50%
             if (emp.specialty === "concept") {
                 artGen *= 1.50;
             }
         } else if (emp.role === "designer") {
-            desGen = (emp.stats.design * 0.45) + Math.random() * 5;
-            codeGen = (emp.stats.code * 0.1);
+            desGen = ((emp.stats.design * 0.45) + Math.random() * 5) * efficiency;
+            codeGen = (emp.stats.code * 0.1) * efficiency;
             
             // 专精：创意主笔 (writer): 策划产出增幅 40%
             if (emp.specialty === "writer") {
@@ -272,6 +288,10 @@ function developProgressTick() {
             spawnFloatingText("BUG+", "overlay-bugs", "bug");
             playSFX("bug");
         }
+
+        const fatigueGain = gameState.researchPerks && gameState.researchPerks.workflow ? 3 : 4;
+        emp.fatigue = Math.min(100, (emp.fatigue || 0) + fatigueGain);
+        emp.morale = Math.max(0, (emp.morale == null ? 75 : emp.morale) - (emp.fatigue > 70 ? 2 : 0));
 
         // 累加属性
         proj.code += codeGen;
@@ -288,6 +308,15 @@ function developProgressTick() {
         playSFX("point");
     }
 
+    if (!proj.miniReady) {
+        proj.miniCooldown = Math.max(0, (proj.miniCooldown || 0) - 1);
+        if (proj.miniCooldown === 0) {
+            proj.miniReady = true;
+            spawnFloatingText("灵感火花!", "dev-action-btn", "design");
+            playSFX("point");
+        }
+    }
+
     // 增加开发进度 (进度速度由所有员工总效率决定)
     const teamPower = gameState.employees.reduce((sum, emp) => sum + (emp.stats.code + emp.stats.art + emp.stats.design), 0);
     
@@ -299,7 +328,8 @@ function developProgressTick() {
         }
     });
 
-    const baseProgressStep = ((teamPower * 0.08) + 10) * engineSpeedBonus;
+    const workflowBonus = gameState.researchPerks && gameState.researchPerks.workflow ? 1.08 : 1.0;
+    const baseProgressStep = ((teamPower * 0.08) + 10) * engineSpeedBonus * workflowBonus;
     proj.progress += baseProgressStep;
 
     maybeTriggerDevelopmentEvent(proj);
@@ -314,6 +344,48 @@ function developProgressTick() {
     }
 
     updateDevStatsUI();
+}
+
+function triggerCodingMiniAction(proj) {
+    if (!proj.miniReady) return;
+
+    const ratio = GENRES_DATA[proj.genre].ratio;
+    const streak = (proj.miniStreak || 0) + 1;
+    const boost = Math.min(34, 9 + streak * 4);
+    const progressBoost = Math.min(14, 4 + streak * 1.5);
+
+    proj.code += boost * ratio.code;
+    proj.art += boost * ratio.art;
+    proj.design += boost * ratio.design;
+    proj.progress = Math.min(100, proj.progress + progressBoost);
+    proj.miniStreak = streak;
+    proj.miniReady = false;
+    proj.miniCooldown = Math.max(1, 4 - Math.min(3, Math.floor(streak / 2)));
+
+    gameState.employees.forEach(emp => {
+        emp.fatigue = Math.min(100, (emp.fatigue || 0) + 2);
+        if (streak >= 4) {
+            emp.morale = Math.max(0, (emp.morale == null ? 75 : emp.morale) - 1);
+        }
+    });
+
+    if (streak >= 4 && Math.random() < 0.22) {
+        proj.bugs += 1;
+        spawnFloatingText("冲刺副作用 BUG+1", "overlay-bugs", "bug");
+        playSFX("bug");
+    } else {
+        playSFX("success");
+    }
+
+    spawnFloatingText(`冲刺 +${Math.round(boost)}`, "overlay-progress", "up");
+    addChronicleEntry(`⚡ 《${proj.name}》完成第 ${streak} 次灵感冲刺，研发进度明显推进。`);
+
+    if (proj.progress >= 100) {
+        proj.progress = 100;
+        proj.state = "debugging";
+        startBugSpawning();
+        playSFX("success");
+    }
 }
 
 const DEVELOPMENT_EVENTS = [
@@ -422,7 +494,11 @@ function triggerDevAction() {
     const proj = gameState.currentProject;
     if (!proj) return;
 
-    if (proj.state === "debugging") {
+    if (proj.state === "coding") {
+        triggerCodingMiniAction(proj);
+        updateDevStatsUI();
+        saveGame();
+    } else if (proj.state === "debugging") {
         // 点击修复 Bug (计算 Debug 狂魔加成)
         let qaPower = gameState.employees.reduce((sum, emp) => {
             let power = emp.stats.code;

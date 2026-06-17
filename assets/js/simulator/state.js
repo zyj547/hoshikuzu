@@ -62,6 +62,8 @@ function createDefaultGameState() {
         employees: [
             { id: "player", name: "创始人(您)", role: "designer", stats: { code: 15, art: 10, design: 20 }, salary: 0, level: 1, xp: 0, trait: "multi", morale: 78, fatigue: 0 }
         ],
+        officeSlots: 5,
+        hiringRefreshes: 0,
         unlockedGenres: ["Casual"],
         unlockedTopics: ["Laborer"],
         unlockedPlatforms: ["Mobile"],
@@ -104,7 +106,7 @@ const SAVE_LIMITS = {
     text: 80,
     chronologyText: 240,
     chronology: 100,
-    employees: 5,
+    employees: 8,
     releases: 80,
     stat: 999,
     funds: 999999999,
@@ -172,6 +174,7 @@ function sanitizeEmployee(emp, fallback) {
         level: clampInteger(source.level, 1, 99, fallback.level || 1),
         xp: clampInteger(source.xp, 0, 999999, fallback.xp || 0),
         trait: enumValue(source.trait, Object.keys(EMPLOYEE_TRAITS), fallback.trait || "none"),
+        rarity: enumValue(source.rarity, ["R", "SR", "SSR"], fallback.rarity || "R"),
         morale: clampInteger(source.morale, 0, 100, fallback.morale == null ? 75 : fallback.morale),
         fatigue: clampInteger(source.fatigue, 0, 100, fallback.fatigue || 0)
     };
@@ -197,6 +200,9 @@ function sanitizeProject(project) {
         design: clampInteger(project.design, 0, 99999, 0),
         bugs: clampInteger(project.bugs, 0, 9999, 0),
         devEventCooldown: clampInteger(project.devEventCooldown, 0, 12, 0),
+        miniCooldown: clampInteger(project.miniCooldown, 0, 8, 0),
+        miniStreak: clampInteger(project.miniStreak, 0, 99, 0),
+        miniReady: Boolean(project.miniReady),
         state: enumValue(project.state, VALID_PROJECT_STATES, "coding")
     };
 }
@@ -269,8 +275,10 @@ function sanitizeSave(rawSave) {
     clean.fans = clampInteger(migrated.fans, 0, SAVE_LIMITS.fans, defaults.fans);
     clean.rp = clampInteger(migrated.rp, 0, SAVE_LIMITS.rp, defaults.rp);
     clean.date = sanitizeDate(migrated.date);
+    clean.officeSlots = clampInteger(migrated.officeSlots, 5, 8, defaults.officeSlots);
+    clean.hiringRefreshes = clampInteger(migrated.hiringRefreshes, 0, 999999, defaults.hiringRefreshes);
     clean.employees = (Array.isArray(migrated.employees) ? migrated.employees : defaults.employees)
-        .slice(0, SAVE_LIMITS.employees)
+        .slice(0, clean.officeSlots)
         .map((emp, idx) => sanitizeEmployee(emp, defaults.employees[idx] || defaults.employees[0]));
     if (clean.employees.length === 0) {
         clean.employees = defaults.employees.map(emp => sanitizeEmployee(emp, emp));

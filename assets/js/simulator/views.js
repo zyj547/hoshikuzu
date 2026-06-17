@@ -1,4 +1,4 @@
-﻿// ==========================================================================
+// ==========================================================================
 // 辅助渲染与主逻辑
 // ==========================================================================
 
@@ -38,6 +38,50 @@ function refreshActiveScreen() {
     }
 }
 
+function staffHealthTone(value, inverse = false) {
+    if (inverse) {
+        if (value <= 30) return "good";
+        if (value <= 65) return "warn";
+        return "risk";
+    }
+    if (value >= 70) return "good";
+    if (value >= 45) return "warn";
+    return "risk";
+}
+
+function teamSummary() {
+    const totals = gameState.employees.reduce((sum, emp) => {
+        sum.code += emp.stats.code;
+        sum.art += emp.stats.art;
+        sum.design += emp.stats.design;
+        sum.fatigue += emp.fatigue || 0;
+        sum.morale += emp.morale == null ? 75 : emp.morale;
+        return sum;
+    }, { code: 0, art: 0, design: 0, fatigue: 0, morale: 0 });
+    const count = Math.max(1, gameState.employees.length);
+    const focusMap = [
+        { key: "code", name: "代码" },
+        { key: "art", name: "美术" },
+        { key: "design", name: "策划" }
+    ].sort((a, b) => totals[b.key] - totals[a.key]);
+    return {
+        focus: focusMap[0].name,
+        avgFatigue: Math.round(totals.fatigue / count),
+        avgMorale: Math.round(totals.morale / count)
+    };
+}
+
+function nextActionHint(weeklyOut) {
+    const officeSlots = gameState.officeSlots || 5;
+    if (gameState.currentProject) return "推进当前项目";
+    if (gameState.funds < weeklyOut * 6) return "控制开支";
+    if (gameState.employees.length >= officeSlots && officeSlots < 8) return "扩张工位";
+    if (gameState.employees.length < Math.min(3, officeSlots)) return "补齐团队";
+    if (gameState.rp >= 18) return "研究新路线";
+    if (gameState.releases.length === 0) return "立项首作";
+    return "冲击趋势题材";
+}
+
 // 渲染办公室列表
 function loadOfficeDesks() {
     const container = document.getElementById("office-desks");
@@ -52,11 +96,13 @@ function loadOfficeDesks() {
         writer: "创意主笔"
     };
 
-    // 循环遍历渲染 5 个卡座
-    for (let i = 0; i < 5; i++) {
+    const officeSlots = gameState.officeSlots || 5;
+
+    // 循环遍历渲染当前办公室卡座
+    for (let i = 0; i < officeSlots; i++) {
         const emp = gameState.employees[i];
         const card = document.createElement("div");
-        card.className = "desk-card";
+        card.className = emp ? "desk-card employee-card" : "desk-card empty-desk-card";
 
         if (emp) {
             let iconClass = "fa-laptop-code";
@@ -70,24 +116,45 @@ function loadOfficeDesks() {
                 let tagColor = "var(--accent-neon)";
                 if (emp.role === "artist") tagColor = "var(--accent-pink)";
                 if (emp.role === "designer") tagColor = "var(--accent-yellow)";
-                specialtyTagHtml = `<span style="font-size: 0.72rem; display: inline-block; padding: 0.1rem 0.35rem; border-radius: 4px; border: 1px solid ${tagColor}; color: ${tagColor}; text-shadow: 0 0 5px ${tagColor}; font-weight: bold; margin-left: 0.3rem;">${specialtyNames[emp.specialty]}</span>`;
+                specialtyTagHtml = `<span class="specialty-tag" style="border-color:${tagColor}; color:${tagColor}; text-shadow:0 0 5px ${tagColor};">${specialtyNames[emp.specialty]}</span>`;
             }
+            // 稀有度徽章
+            const empRarityKey = emp.rarity || "R";
+            const empRarity = HIRING_RARITIES[empRarityKey];
+            const rarityBadgeHtml = `<span class="desk-rarity-badge" style="color:${empRarity.color}; border-color:${empRarity.color};">${empRarity.name}</span>`;
+            const morale = emp.morale == null ? 75 : emp.morale;
+            const fatigue = emp.fatigue || 0;
+            const efficiency = Math.round(employeeEfficiency(emp) * 100);
+            const restCost = Math.max(800, Math.round(emp.salary * 0.6));
 
             // 是否可以专精
+            const fireButtonHtml = i === 0 || emp.id === "player"
+                ? `<button class="btn-research staff-action-btn fire" disabled>创始人</button>`
+                : `<button class="btn-research staff-action-btn fire" onclick="fireEmployee(${i})">开除</button>`;
             let actionButtonHtml = `
-                <button class="btn-research" style="border-color: var(--accent-yellow); color: var(--accent-yellow);" onclick="trainEmployee(${i})">
-                    精英培训 (¥${emp.level * 4000})
-                </button>
+                <div class="staff-action-row compact">
+                    <button class="btn-research staff-action-btn train" onclick="trainEmployee(${i})">
+                        培训 (¥${emp.level * 4000})
+                    </button>
+                    <button class="btn-research staff-action-btn rest" onclick="restEmployee(${i})">
+                        休整 (¥${restCost})
+                    </button>
+                    ${fireButtonHtml}
+                </div>
             `;
             if (emp.level >= 5 && !emp.specialty) {
                 actionButtonHtml = `
-                    <div style="display: flex; gap: 0.4rem; width: 100%;">
-                        <button class="btn-research" style="flex: 1; border-color: var(--accent-yellow); color: var(--accent-yellow);" onclick="trainEmployee(${i})">
+                    <div class="staff-action-row compact">
+                        <button class="btn-research staff-action-btn train" onclick="trainEmployee(${i})">
                             培训 (¥${emp.level * 4000})
                         </button>
-                        <button class="btn-research" style="flex: 1.3; border-color: var(--accent-neon); color: var(--accent-neon); box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);" onclick="openSpecialtyModal(${i})">
-                            ✨ 职业专精
+                        <button class="btn-research staff-action-btn specialize" onclick="openSpecialtyModal(${i})">
+                            专精
                         </button>
+                        <button class="btn-research staff-action-btn rest" onclick="restEmployee(${i})">
+                            休整
+                        </button>
+                        ${fireButtonHtml}
                     </div>
                 `;
             }
@@ -99,8 +166,9 @@ function loadOfficeDesks() {
                         <span class="staff-role-badge">Lv</span>
                     </div>
                     <div class="staff-profile">
-                        <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                        <div class="staff-name-row">
                             <span class="staff-name">${escapeHtml(emp.name)}</span>
+                            ${rarityBadgeHtml}
                             ${specialtyTagHtml}
                         </div>
                         <span class="staff-level">${roleName} | 等级 Lv.${emp.level}</span>
@@ -120,27 +188,59 @@ function loadOfficeDesks() {
                         <span class="skill-lbl">设计</span>
                     </div>
                 </div>
-                <div>
+                <div class="staff-condition">
+                    <div class="condition-pill ${staffHealthTone(morale)}">心情 ${morale}</div>
+                    <div class="condition-pill ${staffHealthTone(fatigue, true)}">疲劳 ${fatigue}</div>
+                    <div class="condition-pill ${staffHealthTone(efficiency)}">效率 ${efficiency}%</div>
+                </div>
+                <div class="staff-actions">
                     ${actionButtonHtml}
                 </div>
             `;
         } else {
             // 空卡座
             card.innerHTML = `
-                <div class="staff-avatar-box" style="opacity: 0.4;">
-                    <div class="staff-avatar" style="border-color: rgba(255,255,255,0.1); color: var(--text-secondary);">
+                <div class="staff-avatar-box empty-desk-main">
+                    <div class="staff-avatar empty-avatar">
                         <i class="fa-solid fa-chair"></i>
                     </div>
                     <div class="staff-profile">
-                        <span class="staff-name" style="color: var(--text-secondary);">空置开发卡座</span>
+                        <span class="staff-name muted-name">空置开发卡座</span>
                         <span class="staff-level">前往人才招募中心扩大团队</span>
                     </div>
                 </div>
-                <button class="btn-research" onclick="switchScreen('staff')">
-                    快速招募员工
-                </button>
+                <div class="staff-actions empty-desk-action">
+                    <button class="btn-research staff-empty-action" onclick="switchScreen('staff')">
+                        快速招募员工
+                    </button>
+                </div>
             `;
         }
+        container.appendChild(card);
+    }
+
+    if (officeSlots < 8) {
+        const cost = getOfficeExpandCost();
+        const card = document.createElement("div");
+        card.className = "desk-card office-expand-card";
+        card.innerHTML = `
+            <div class="staff-avatar-box">
+                <div class="staff-avatar expand-avatar">
+                    <i class="fa-solid fa-building-circle-arrow-right"></i>
+                </div>
+                <div class="staff-profile">
+                    <span class="staff-name">扩建办公室</span>
+                    <span class="staff-level">当前容量 ${gameState.employees.length}/${officeSlots}，最高 8 人</span>
+                </div>
+            </div>
+            <div class="desk-status-text">新增 1 个员工槽位</div>
+            <div class="desk-status-text expand-cost">¥${cost.toLocaleString()}</div>
+            <div class="staff-actions">
+                <button class="btn-research staff-empty-action" onclick="expandOfficeSlots()">
+                    支付扩建费用
+                </button>
+            </div>
+        `;
         container.appendChild(card);
     }
 }
@@ -246,6 +346,22 @@ function updateStatsUI() {
     const weeklyWages = gameState.employees.reduce((sum, emp) => sum + emp.salary, 0);
     document.getElementById("aside-weekly-wages").innerText = `¥${weeklyWages}`;
     document.getElementById("aside-weekly-rent").innerText = `¥500`;
+    const weeklyOut = weeklyWages + BALANCE.weeklyRent;
+    const runwayWeeks = gameState.funds > 0 ? Math.floor(gameState.funds / Math.max(1, weeklyOut)) : 0;
+    document.getElementById("aside-runway").innerText = `${runwayWeeks} 周`;
+    document.getElementById("aside-runway").style.color = runwayWeeks < 6 ? "var(--accent-pink)" : runwayWeeks < 12 ? "var(--accent-yellow)" : "var(--accent-neon)";
+    const summary = teamSummary();
+    document.getElementById("aside-team-focus").innerText = summary.focus;
+    const officeSlotEl = document.getElementById("aside-office-slots");
+    if (officeSlotEl) {
+        const officeSlots = gameState.officeSlots || 5;
+        officeSlotEl.innerText = `${gameState.employees.length}/${officeSlots}`;
+        officeSlotEl.style.color = gameState.employees.length >= officeSlots ? "var(--accent-yellow)" : "var(--accent-neon)";
+    }
+    const healthText = summary.avgFatigue > 70 ? "疲劳过高" : summary.avgMorale < 45 ? "士气低迷" : "稳定";
+    document.getElementById("aside-team-health").innerText = `${healthText} (${summary.avgMorale}/${summary.avgFatigue})`;
+    document.getElementById("aside-team-health").style.color = healthText === "稳定" ? "var(--accent-neon)" : "var(--accent-yellow)";
+    document.getElementById("aside-next-action").innerText = nextActionHint(weeklyOut);
 
     // 财务折叠面板内容更新
     const lastSalesVal = gameState.lastSales || 0;

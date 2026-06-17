@@ -157,16 +157,16 @@
                                         <span class="list-lbl">上周净收入 <i class="fa-solid fa-chevron-down" id="bill-arrow" style="font-size: 0.72rem; margin-left: 3px; transition: transform 0.2s;"></i></span>
                                         <span class="list-val accent" id="aside-last-income">¥0</span>
                                     </div>
-                                    <div id="weekly-bill-details" style="display: none; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 0.6rem; margin-bottom: 0.5rem; flex-direction: column; gap: 0.4rem; font-size: 0.76rem; color: var(--text-secondary); text-align: left; transition: all 0.2s;">
-                                        <div style="display: flex; justify-content: space-between;">
+                                    <div id="weekly-bill-details" class="weekly-bill-details">
+                                        <div class="bill-row">
                                             <span>🎮 游戏销售额：</span>
                                             <span style="color: var(--accent-emerald);" id="bill-game-sales">+¥0</span>
                                         </div>
-                                        <div style="display: flex; justify-content: space-between;">
+                                        <div class="bill-row">
                                             <span>👥 员工工资：</span>
                                             <span style="color: var(--accent-pink);" id="bill-employee-wages">-¥0</span>
                                         </div>
-                                        <div style="display: flex; justify-content: space-between;">
+                                        <div class="bill-row">
                                             <span>🏢 办公室房租：</span>
                                             <span style="color: var(--accent-pink);">-¥500</span>
                                         </div>
@@ -178,6 +178,22 @@
                                     <div class="list-item">
                                         <span class="list-lbl">每周租金支出</span>
                                         <span class="list-val" id="aside-weekly-rent" style="color: var(--accent-pink);">¥500</span>
+                                    </div>
+                                    <div class="list-item">
+                                        <span class="list-lbl">现金可支撑</span>
+                                        <span class="list-val" id="aside-runway" style="color: var(--accent-neon);">- 周</span>
+                                    </div>
+                                    <div class="list-item">
+                                        <span class="list-lbl">团队强项</span>
+                                        <span class="list-val" id="aside-team-focus" style="color: #fff;">-</span>
+                                    </div>
+                                    <div class="list-item">
+                                        <span class="list-lbl">工位容量</span>
+                                        <span class="list-val" id="aside-office-slots" style="color: var(--accent-neon);">1/5</span>
+                                    </div>
+                                    <div class="list-item">
+                                        <span class="list-lbl">团队状态</span>
+                                        <span class="list-val" id="aside-team-health" style="color: var(--accent-yellow);">稳定</span>
                                     </div>
                                 </div>
                             </div>
@@ -192,6 +208,10 @@
                                     <div class="list-item">
                                         <span class="list-lbl">当前热门题材</span>
                                         <span class="list-val" id="aside-trend-topic" style="color: #fff;">打工人</span>
+                                    </div>
+                                    <div class="list-item">
+                                        <span class="list-lbl">建议动作</span>
+                                        <span class="list-val" id="aside-next-action" style="color: var(--accent-yellow);">观察市场</span>
                                     </div>
                                 </div>
                             </div>
@@ -256,6 +276,16 @@
                     </div>
 
                     <div class="staff-layout">
+                        <div class="staff-market-bar">
+                            <div class="market-copy">
+                                <span class="market-title">人才市场</span>
+                                <span class="market-meta" id="staff-ssr-pity">8 次内必出 SSR</span>
+                            </div>
+                            <button class="btn-refresh-market" onclick="refreshHiringMarket()">
+                                <i class="fa-solid fa-rotate"></i>
+                                刷新市场 <span id="staff-refresh-cost">¥1,800</span>
+                            </button>
+                        </div>
                         <div class="hiring-pool" id="hiring-list">
                             <!-- 动态加载待聘候选人 -->
                         </div>
@@ -273,6 +303,7 @@
                         <button class="tab-link active" onclick="switchResearchTab('genre', this)">解锁游戏类型</button>
                         <button class="tab-link" onclick="switchResearchTab('topic', this)">解锁主题题材</button>
                         <button class="tab-link" onclick="switchResearchTab('platform', this)">解锁次时代平台</button>
+                        <button class="tab-link" onclick="switchResearchTab('perk', this)">经营强化</button>
                     </div>
 
                     <div class="research-grid" id="research-list">

@@ -620,6 +620,7 @@ function applyMedalShopPerksAndStart() {
     gameState.funds = shopSelectedPerks.fundsBoost ? 80000 : 50000;
     gameState.unlockedGenres = shopSelectedPerks.roguelikeUnlocked ? ["Casual", "Roguelike"] : ["Casual"];
     gameState.activePerks = { ...shopSelectedPerks };
+    gameState.researchPerks = { workflow: false, community: false, analytics: false };
 
     saveGame();
     addChronicleEntry("🍊 桔子网络工作室正式重组成立！承载着勋章特权，开启全新的征程。");
