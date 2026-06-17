@@ -1572,6 +1572,20 @@
             .about-counters { grid-template-columns: 1fr !important; }
             .counter-card { padding: 1rem !important; }
         }
+
+        .nav-sim-link {
+            position: relative;
+            color: var(--accent-neon) !important;
+            text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+            font-weight: 700 !important;
+        }
+        .nav-sim-link::after {
+            background: linear-gradient(90deg, #00f0ff, #d946ef) !important;
+        }
+        .drawer-sim-link {
+            color: var(--accent-neon) !important;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -1605,6 +1619,7 @@
             <li><a href="#solution">研发实力</a></li>
             <li><a href="#products">旗舰产品</a></li>
             <li><a href="#footer">联系我们</a></li>
+            <li><a href="simulator.html" target="_blank" class="nav-sim-link"><i class="fa-solid fa-gamepad" style="margin-right: 4px;"></i>星屑模拟器</a></li>
         </ul>
         <button class="nav-hamburger" id="nav-hamburger" aria-label="打开菜单">
             <span></span><span></span><span></span>
@@ -1620,6 +1635,7 @@
         <a href="#solution" class="drawer-link">研发实力</a>
         <a href="#products" class="drawer-link">旗舰产品</a>
         <a href="#footer" class="drawer-link">联系我们</a>
+        <a href="simulator.html" target="_blank" class="drawer-link drawer-sim-link"><i class="fa-solid fa-gamepad" style="margin-right: 8px;"></i>星屑模拟器</a>
     </div>
 
     <!-- 氛围光晕层 -->

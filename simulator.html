@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星屑创业模拟器 - 打造您的游戏帝国</title>
+    <!-- Google Fonts: Orbitron & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6.4.0 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ==========================================================================
+           1. 设计系统与重置 (Design System & Reset)
+           ========================================================================== */
+        :root {
+            --bg-color: #05080f;
+            --panel-bg: rgba(15, 18, 36, 0.75);
+            --card-bg: rgba(26, 31, 58, 0.55);
+            --card-border: rgba(0, 240, 255, 0.15);
+            --card-border-hover: rgba(0, 240, 255, 0.4);
+            
+            --accent-neon: #00f0ff;      /* 程序员蓝/青 */
+            --accent-pink: #d946ef;      /* 美术粉/洋红 */
+            --accent-yellow: #fbbf24;    /* 策划黄/金 */
+            --accent-purple: #7c3aed;    /* 科技/研发紫 */
+            --accent-emerald: #10b981;   /* Bug测试绿 */
+            
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --font-title: 'Orbitron', 'Inter', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(180deg, #05080f 0%, #0c0f1d 50%, #1e1b4b 100%) fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 氛围背景 */
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: -4;
+        }
+
+        .bg-nebula {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: -3;
+            opacity: 0.15;
+            animation: nebula-float 25s ease-in-out infinite alternate;
+        }
+        .nebula-1 {
+            width: 600px; height: 600px;
+            top: -200px; left: -100px;
+            background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%);
+        }
+        .nebula-2 {
+            width: 500px; height: 500px;
+            bottom: -150px; right: -100px;
+            background: radial-gradient(circle, var(--accent-neon) 0%, transparent 70%);
+        }
+
+        @keyframes nebula-float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 40px) scale(1.15); }
+        }
+
+        /* ==========================================================================
+           2. 主面板布局 (Dashboard Layout)
+           ========================================================================== */
+        .dashboard-container {
+            width: 100%;
+            max-width: 1200px;
+            height: 90vh;
+            min-height: 680px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            margin: 20px;
+        }
+
+        /* 头部状态条 (Top Info Bar) */
+        .top-bar {
+            height: 80px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            background: rgba(11, 13, 28, 0.5);
+        }
+
+        .studio-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+        .brand-icon {
+            font-size: 1.5rem;
+            color: var(--accent-neon);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+            animation: spin-slow 10s linear infinite;
+        }
+        .brand-name {
+            font-family: var(--font-title);
+            font-size: 1.25rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #ffffff 0%, var(--accent-neon) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 2.5rem;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .stat-icon {
+            font-size: 1.15rem;
+        }
+        .stat-icon.money { color: var(--accent-neon); }
+        .stat-icon.fans { color: var(--accent-pink); }
+        .stat-icon.tech { color: var(--accent-purple); }
+        .stat-icon.date { color: var(--accent-yellow); }
+
+        .stat-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-val {
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* 核心内容区 */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧边导航栏 (Sidebar Navigation) */
+        .sidebar {
+            width: 220px;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(8, 10, 22, 0.4);
+            padding: 1.5rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .nav-item button {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item button i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .nav-item button:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item button:hover i {
+            transform: scale(1.15);
+        }
+
+        .nav-item.active button {
+            color: var(--accent-neon);
+            background: rgba(0, 240, 255, 0.05);
+            border-color: rgba(0, 240, 255, 0.15);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+
+        .nav-footer-btn {
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            background: rgba(217, 70, 239, 0.05);
+            border: 1px solid rgba(217, 70, 239, 0.15);
+            color: var(--accent-pink);
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-footer-btn:hover {
+            background: rgba(217, 70, 239, 0.15);
+            box-shadow: 0 0 15px rgba(217, 70, 239, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* 主视口区域 */
+        .content-viewport {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        /* 隐藏所有的视口页面 */
+        .screen-panel {
+            display: none;
+            height: 100%;
+            animation: fade-in 0.4s ease;
+        }
+
+        .screen-panel.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 通用标题设计 */
+        .panel-header {
+            margin-bottom: 1.5rem;
+        }
+        .panel-title {
+            font-family: var(--font-title);
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .panel-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* ==========================================================================
+           3. 模块页面细节 (Module Screens)
+           ========================================================================== */
+        
+        /* ── 3.1 办公室总览 (Office Panel) ── */
+        .office-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            flex: 1;
+        }
+
+        /* 员工开发卡座 */
+        .desks-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .desk-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .desk-card:hover {
+            border-color: var(--card-border-hover);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.08);
+        }
+
+        .staff-avatar-box {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+        }
+        .staff-avatar {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--accent-neon);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+        }
+        .staff-avatar.programmer { border-color: var(--accent-neon); color: var(--accent-neon); }
+        .staff-avatar.artist { border-color: var(--accent-pink); color: var(--accent-pink); }
+        .staff-avatar.designer { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+
+        .staff-role-badge {
+            position: absolute;
+            bottom: -5px; right: -5px;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            border: 1px solid currentColor;
+        }
+
+        .staff-profile {
+            display: flex;
+            flex-direction: column;
+        }
+        .staff-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        .staff-level {
+            font-family: var(--font-title);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+
+        .staff-skills {
+            display: flex;
+            gap: 1.5rem;
+        }
+        .skill-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .skill-val {
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .skill-val.code { color: var(--accent-neon); }
+        .skill-val.art { color: var(--accent-pink); }
+        .skill-val.design { color: var(--accent-yellow); }
+        .skill-lbl {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+
+        .desk-status-text {
+            font-size: 0.85rem;
+            color: var(--accent-neon);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .desk-status-text.idle { color: var(--text-secondary); }
+
+        /* 办公室右侧状态 */
+        .office-aside {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .glass-box {
+            background: rgba(15, 18, 36, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .aside-title {
+            font-family: var(--font-title);
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            color: var(--accent-yellow);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+        .list-lbl { color: var(--text-secondary); }
+        .list-val { font-weight: 600; }
+        .list-val.accent { color: var(--accent-neon); }
+
+        /* ── 3.2 游戏开发面板 (Develop Panel) ── */
+        .dev-setup-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 650px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-neon);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .input-text {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .input-text:focus {
+            border-color: var(--accent-neon);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .select-btn {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 0.8rem 1rem;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .select-btn:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+        .select-btn.selected {
+            border-color: var(--accent-neon);
+            color: #fff;
+            background: rgba(0, 240, 255, 0.04);
+            box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.05);
+        }
+        .btn-cost {
+            font-family: var(--font-title);
+            font-size: 0.75rem;
+            color: var(--accent-yellow);
+        }
+
+        .btn-start-dev {
+            background: linear-gradient(135deg, #00f0ff 0%, #d946ef 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem;
+            color: #0b0d10;
+            font-family: var(--font-title);
+            font-weight: 900;
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
+            margin-top: 1rem;
+        }
+        .btn-start-dev:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.45);
+        }
+
+        /* ── 3.3 员工招聘面板 (Staff Hiring Panel) ── */
+        .staff-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .hiring-pool {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .candidate-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .candidate-card:hover {
+            border-color: var(--card-border-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 240, 255, 0.06);
+        }
+
+        .candidate-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .candidate-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .candidate-skills {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            background: rgba(0,0,0,0.2);
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+        .candidate-skill {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .candidate-skill-val {
+            font-family: var(--font-title);
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+        .candidate-skill-lbl {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+
+        .candidate-salary-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 0.75rem;
+        }
+        .candidate-salary {
+            font-family: var(--font-title);
+            color: var(--accent-yellow);
+            font-weight: 700;
+        }
+
+        .btn-hire {
+            width: 100%;
+            padding: 0.65rem;
+            border-radius: 8px;
+            border: 1px solid var(--accent-neon);
+            background: transparent;
+            color: var(--accent-neon);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-hire:hover {
+            background: var(--accent-neon);
+            color: #0b0d10;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
+        }
+
+        /* ── 3.4 科技树研发面板 (Research Panel) ── */
+        .research-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 0.5rem;
+        }
+        .tab-link {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab-link.active {
+            color: var(--accent-purple);
+            border-color: var(--accent-purple);
+            text-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
+        }
+
+        .research-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .research-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1rem;
+            transition: all 0.3s;
+        }
+        .research-card:hover {
+            border-color: var(--accent-purple);
+            box-shadow: 0 5px 20px rgba(124, 58, 237, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .research-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .research-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        .research-desc {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .research-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 0.8rem;
+        }
+        .research-cost {
+            font-family: var(--font-title);
+            font-size: 0.85rem;
+            color: var(--accent-purple);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .btn-research {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--accent-purple);
+            background: transparent;
+            color: var(--accent-purple);
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-research:hover:not(:disabled) {
+            background: var(--accent-purple);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.25);
+        }
+        .btn-research:disabled {
+            border-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        /* ── 3.5 历史发布面板 (History Releases) ── */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-item {
+            background: var(--card-bg);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.3s;
+        }
+        .history-item:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            background: rgba(26, 31, 58, 0.7);
+        }
+
+        .game-title-box {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .game-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text-primary);
+        }
+        .game-metadata {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .game-rating-box {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: var(--font-title);
+            font-weight: 700;
+            color: var(--accent-yellow);
+        }
+
+        .history-stat-box {
+            display: flex;
+            flex-direction: column;
+        }
+        .history-stat-lbl {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+        }
+        .history-stat-val {
+            font-family: var(--font-title);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-top: 0.15rem;
+        }
+
+        /* ==========================================================================
+           4. 覆盖浮层 (Modals & Overlays)
+           ========================================================================== */
+        
+        /* ── 4.1 游戏开发看板遮罩 ── */
+        .dev-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 8, 15, 0.95);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            display: none; /* 默认隐藏 */
+        }
+        .dev-overlay.active {
+            display: flex;
+        }
+
+        .dev-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .dev-game-name {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00f0ff 0%, #d946ef 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .dev-game-meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            letter-spacing: 1.5px;
+        }
+
+        /* 粒子搜集罐容器 */
+        .particle-reactor {
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            border: 2px dashed var(--accent-neon);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            animation: pulse-border 2s infinite ease-in-out;
+        }
+        .reactor-core {
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.2) 0%, transparent 70%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .reactor-progress-val {
+            font-family: var(--font-title);
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--accent-neon);
+        }
+        .reactor-progress-lbl {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-top: 0.1rem;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(0, 240, 255, 0.3); transform: scale(1); }
+            50% { border-color: rgba(0, 240, 255, 0.8); transform: scale(1.03); }
+        }
+
+        /* 四种属性点数显示 */
+        .points-dashboard {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .points-counter {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+        }
+        .points-val {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            font-weight: 900;
+        }
+        .points-val.code { color: var(--accent-neon); text-shadow: 0 0 10px rgba(0,240,255,0.2); }
+        .points-val.art { color: var(--accent-pink); text-shadow: 0 0 10px rgba(217,70,239,0.2); }
+        .points-val.design { color: var(--accent-yellow); text-shadow: 0 0 10px rgba(251,191,36,0.2); }
+        .points-val.bugs { color: var(--accent-emerald); text-shadow: 0 0 10px rgba(16,185,129,0.2); }
+
+        .points-lbl {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            width: 100%;
+            max-width: 600px;
+            height: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-neon) 0%, var(--accent-pink) 100%);
+            border-radius: 10px;
+            transition: width 0.1s linear;
+        }
+
+        .btn-dev-action {
+            padding: 0.9rem 2.5rem;
+            border-radius: 12px;
+            border: none;
+            font-family: var(--font-title);
+            font-weight: 900;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-dev-action.bug-fixing {
+            background: var(--accent-emerald);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+        }
+        .btn-dev-action.release {
+            background: linear-gradient(135deg, #00f0ff 0%, #d946ef 100%);
+            color: #0b0d10;
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
+        }
+        .btn-dev-action.disabled {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-secondary);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* ── 4.2 评测报告与发布报告 ── */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 8, 15, 0.9);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            display: none; /* 默认隐藏 */
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .review-card {
+            background: #0f1224;
+            border: 1.5px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 30px rgba(0, 240, 255, 0.1);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 550px;
+            padding: 2.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: modal-zoom 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modal-zoom {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .review-title {
+            font-family: var(--font-title);
+            font-size: 1.4rem;
+            font-weight: 800;
+            text-align: center;
+            color: var(--accent-yellow);
+        }
+
+        .rating-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .rating-num {
+            font-family: var(--font-title);
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--accent-yellow);
+            text-shadow: 0 0 15px rgba(251,191,36,0.3);
+        }
+        .rating-stars {
+            color: var(--accent-yellow);
+            font-size: 1.1rem;
+            margin-top: 0.25rem;
+        }
+
+        .review-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .review-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .reviewer-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+        }
+        .reviewer-name { font-weight: 700; color: var(--accent-neon); }
+        .reviewer-score { font-family: var(--font-title); font-weight: 700; color: var(--accent-yellow); }
+        .review-text {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .btn-modal-close {
+            background: linear-gradient(135deg, #00f0ff 0%, #d946ef 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 0.85rem;
+            font-family: var(--font-title);
+            font-weight: 900;
+            color: #0b0d10;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 240, 255, 0.2);
+        }
+        .btn-modal-close:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 20px rgba(0, 240, 255, 0.35);
+        }
+
+        /* ── 4.3 随机事件弹窗 ── */
+        .event-card {
+            background: #0f1224;
+            border: 1.5px solid rgba(217, 70, 239, 0.2);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 30px rgba(217, 70, 239, 0.1);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 500px;
+            padding: 2.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            animation: modal-zoom 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .event-title {
+            font-family: var(--font-title);
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--accent-pink);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .event-desc {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        .event-choices {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .choice-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-primary);
+            padding: 0.85rem 1.2rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .choice-btn:hover {
+            border-color: var(--accent-pink);
+            background: rgba(217, 70, 239, 0.04);
+        }
+
+        /* ── 4.4 飘字特效 ── */
+        .floating-point {
+            position: absolute;
+            font-family: var(--font-title);
+            font-size: 0.9rem;
+            font-weight: 800;
+            pointer-events: none;
+            z-index: 100;
+            animation: float-up-fade 1.2s ease-out forwards;
+        }
+        .floating-point.code { color: var(--accent-neon); }
+        .floating-point.art { color: var(--accent-pink); }
+        .floating-point.design { color: var(--accent-yellow); }
+        .floating-point.bug { color: var(--accent-emerald); }
+
+        @keyframes float-up-fade {
+            0% { transform: translateY(0) scale(0.8); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1.1); opacity: 0; }
+        }
+
+        /* 旋转动效 */
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 移动端隐藏/兼容 */
+        @media (max-width: 992px) {
+            .dashboard-container {
+                height: auto;
+                min-height: auto;
+            }
+            .workspace {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                flex-direction: row;
+                padding: 1rem;
+            }
+            .nav-menu {
+                flex-direction: row;
+                width: 100%;
+                overflow-x: auto;
+            }
+            .nav-item button {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            .office-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 空间坐标系背景 -->
+    <div class="bg-grid"></div>
+    <div class="bg-nebula nebula-1"></div>
+    <div class="bg-nebula nebula-2"></div>
+
+    <!-- 模拟器主容器 -->
+    <div class="dashboard-container">
+        
+        <!-- 顶部信息栏 -->
+        <div class="top-bar">
+            <div class="studio-brand" onclick="switchScreen('office')">
+                <i class="fa-solid fa-star brand-icon"></i>
+                <span class="brand-name" id="top-studio-name">星屑工作室</span>
+            </div>
+            
+            <div class="stats-row">
+                <!-- 资金 -->
+                <div class="stat-item">
+                    <i class="fa-solid fa-wallet stat-icon money"></i>
+                    <div class="stat-details">
+                        <span class="stat-label">工作室资金</span>
+                        <span class="stat-val" id="stat-funds">¥50,000</span>
+                    </div>
+                </div>
+                <!-- 粉丝 -->
+                <div class="stat-item">
+                    <i class="fa-solid fa-users stat-icon fans"></i>
+                    <div class="stat-details">
+                        <span class="stat-label">总粉丝数</span>
+                        <span class="stat-val" id="stat-fans">100</span>
+                    </div>
+                </div>
+                <!-- 研发点 -->
+                <div class="stat-item">
+                    <i class="fa-solid fa-lightbulb stat-icon tech"></i>
+                    <div class="stat-details">
+                        <span class="stat-label">研发点数(RP)</span>
+                        <span class="stat-val" id="stat-rp">10</span>
+                    </div>
+                </div>
+                <!-- 日期 -->
+                <div class="stat-item">
+                    <i class="fa-solid fa-calendar-days stat-icon date"></i>
+                    <div class="stat-details">
+                        <span class="stat-label">时间线</span>
+                        <span class="stat-val" id="stat-date">第 1 年 1 月 1 周</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 内部工作台 -->
+        <div class="workspace">
+            <!-- 左侧导航 -->
+            <div class="sidebar">
+                <ul class="nav-menu">
+                    <li class="nav-item active" id="nav-office">
+                        <button onclick="switchScreen('office')"><i class="fa-solid fa-house-laptop"></i>工作室</button>
+                    </li>
+                    <li class="nav-item" id="nav-develop">
+                        <button onclick="switchScreen('develop')"><i class="fa-solid fa-circle-plus"></i>研发新游戏</button>
+                    </li>
+                    <li class="nav-item" id="nav-staff">
+                        <button onclick="switchScreen('staff')"><i class="fa-solid fa-user-plus"></i>人才招募</button>
+                    </li>
+                    <li class="nav-item" id="nav-research">
+                        <button onclick="switchScreen('research')"><i class="fa-solid fa-flask-vial"></i>科技研究</button>
+                    </li>
+                    <li class="nav-item" id="nav-history">
+                        <button onclick="switchScreen('history')"><i class="fa-solid fa-clock-rotate-left"></i>历史作品</button>
+                    </li>
+                </ul>
+
+                <!-- 返回主页按钮 -->
+                <a href="index.html" class="nav-footer-btn">
+                    <i class="fa-solid fa-circle-arrow-left"></i>返回星屑首页
+                </a>
+            </div>
+
+            <!-- 右侧视口 -->
+            <div class="content-viewport">
+                
+                <!-- 3.1 工作室总览面板 -->
+                <div class="screen-panel active" id="panel-office">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="fa-solid fa-laptop-code" style="color: var(--accent-neon);"></i>开发卡座</h2>
+                        <p class="panel-desc">这是您的工作室核心，闲置时员工会默默为您积累研发点数（RP）。</p>
+                    </div>
+                    
+                    <div class="office-grid">
+                        <!-- 开发卡座列表 -->
+                        <div class="desks-section" id="office-desks">
+                            <!-- 动态加载员工桌子 -->
+                        </div>
+
+                        <!-- 办公室财务与状态侧栏 -->
+                        <div class="office-aside">
+                            <div class="glass-box">
+                                <h3 class="aside-title"><i class="fa-solid fa-chart-line"></i>运营简报</h3>
+                                <div class="stat-list">
+                                    <div class="list-item">
+                                        <span class="list-lbl">已发布游戏数</span>
+                                        <span class="list-val" id="aside-released-count">0 款</span>
+                                    </div>
+                                    <div class="list-item">
+                                        <span class="list-lbl">上周净收入</span>
+                                        <span class="list-val accent" id="aside-last-income">¥0</span>
+                                    </div>
+                                    <div class="list-item">
+                                        <span class="list-lbl">每周员工工资</span>
+                                        <span class="list-val" id="aside-weekly-wages" style="color: var(--accent-pink);">¥0</span>
+                                    </div>
+                                    <div class="list-item">
+                                        <span class="list-lbl">每周租金支出</span>
+                                        <span class="list-val" id="aside-weekly-rent" style="color: var(--accent-pink);">¥500</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="glass-box">
+                                <h3 class="aside-title" style="color: var(--accent-pink);"><i class="fa-solid fa-bullhorn"></i>热门趋势</h3>
+                                <div class="stat-list">
+                                    <div class="list-item">
+                                        <span class="list-lbl">当前潮流类型</span>
+                                        <span class="list-val" id="aside-trend-genre" style="color: #fff;">RPG</span>
+                                    </div>
+                                    <div class="list-item">
+                                        <span class="list-lbl">当前热门题材</span>
+                                        <span class="list-val" id="aside-trend-topic" style="color: #fff;">打工人</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3.2 游戏开发立项面板 -->
+                <div class="screen-panel" id="panel-develop">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="fa-solid fa-gamepad" style="color: var(--accent-pink);"></i>立项设计案</h2>
+                        <p class="panel-desc">合理搭配题材、类型和目标平台，好产品才能引爆销量！</p>
+                    </div>
+
+                    <div class="dev-setup-panel">
+                        <!-- 游戏名字 -->
+                        <div class="form-group">
+                            <label class="form-label"><i class="fa-solid fa-pen-nib"></i>游戏名称</label>
+                            <input type="text" class="input-text" id="dev-name" placeholder="输入炫酷的游戏名字">
+                        </div>
+
+                        <!-- 平台选择 -->
+                        <div class="form-group">
+                            <label class="form-label"><i class="fa-solid fa-display"></i>目标平台</label>
+                            <div class="option-grid" id="dev-platforms">
+                                <!-- 动态加载可选平台 -->
+                            </div>
+                        </div>
+
+                        <!-- 类型选择 -->
+                        <div class="form-group">
+                            <label class="form-label"><i class="fa-solid fa-puzzle-piece"></i>游戏类型</label>
+                            <div class="option-grid" id="dev-genres">
+                                <!-- 动态加载可选类型 -->
+                            </div>
+                        </div>
+
+                        <!-- 题材选择 -->
+                        <div class="form-group">
+                            <label class="form-label"><i class="fa-solid fa-book"></i>游戏题材</label>
+                            <div class="option-grid" id="dev-topics">
+                                <!-- 动态加载可选题材 -->
+                            </div>
+                        </div>
+
+                        <!-- 开始研发按钮 -->
+                        <button class="btn-start-dev" onclick="startDevelopment()">
+                            <i class="fa-solid fa-rocket" style="margin-right: 8px;"></i>扣除研发金并开始制作
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3.3 人才招募面板 -->
+                <div class="screen-panel" id="panel-staff">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="fa-solid fa-user-tie" style="color: var(--accent-yellow);"></i>人才招募中心</h2>
+                        <p class="panel-desc">优秀团队是好游戏的前提。您可以花费雇佣金猎聘业界老手！</p>
+                    </div>
+
+                    <div class="staff-layout">
+                        <div class="hiring-pool" id="hiring-list">
+                            <!-- 动态加载待聘候选人 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3.4 科技研发面板 -->
+                <div class="screen-panel" id="panel-research">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="fa-solid fa-flask" style="color: var(--accent-purple);"></i>星屑科技院</h2>
+                        <p class="panel-desc">使用研发点数(RP)解锁更多的游戏题材、类型和次时代平台。</p>
+                    </div>
+
+                    <div class="research-tabs">
+                        <button class="tab-link active" onclick="switchResearchTab('genre', this)">解锁游戏类型</button>
+                        <button class="tab-link" onclick="switchResearchTab('topic', this)">解锁主题题材</button>
+                        <button class="tab-link" onclick="switchResearchTab('platform', this)">解锁次时代平台</button>
+                    </div>
+
+                    <div class="research-grid" id="research-list">
+                        <!-- 动态加载科技树选项 -->
+                    </div>
+                </div>
+
+                <!-- 3.5 历史作品列表 -->
+                <div class="screen-panel" id="panel-history">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="fa-solid fa-trophy" style="color: var(--accent-yellow);"></i>作品陈列室</h2>
+                        <p class="panel-desc">回顾您创造的游戏，总结它们的销售成绩与玩家口碑。</p>
+                    </div>
+
+                    <div class="history-list" id="history-releases">
+                        <!-- 动态加载发布历史 -->
+                    </div>
+                </div>
+
+                <!-- 4.1 游戏研发过程遮罩层 -->
+                <div class="dev-overlay" id="development-overlay">
+                    <div class="dev-header">
+                        <div class="dev-game-name" id="overlay-game-name">项目名</div>
+                        <div class="dev-game-meta" id="overlay-game-meta">Casual | 抖音小游戏</div>
+                    </div>
+
+                    <!-- 进度罐 -->
+                    <div class="particle-reactor" id="reactor-container">
+                        <div class="reactor-core">
+                            <span class="reactor-progress-val" id="overlay-progress">0%</span>
+                            <span class="reactor-progress-lbl">开发进度</span>
+                        </div>
+                    </div>
+
+                    <!-- 四种属性汇总 -->
+                    <div class="points-dashboard">
+                        <div class="points-counter">
+                            <span class="points-val code" id="overlay-code">0</span>
+                            <span class="points-lbl">代码实力</span>
+                        </div>
+                        <div class="points-counter">
+                            <span class="points-val art" id="overlay-art">0</span>
+                            <span class="points-lbl">美术表现</span>
+                        </div>
+                        <div class="points-counter">
+                            <span class="points-val design" id="overlay-design">0</span>
+                            <span class="points-lbl">核心设计</span>
+                        </div>
+                        <div class="points-counter">
+                            <span class="points-val bugs" id="overlay-bugs" style="color: var(--accent-pink);">0</span>
+                            <span class="points-lbl">程序Bug</span>
+                        </div>
+                    </div>
+
+                    <!-- 进度条 -->
+                    <div class="progress-container">
+                        <div class="progress-bar" id="overlay-progress-bar"></div>
+                    </div>
+
+                    <!-- 开发者实时操作交互按钮 -->
+                    <button class="btn-dev-action disabled" id="dev-action-btn" onclick="triggerDevAction()">
+                        正在火热研发中...
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- 4.2 评测与结算模态框 -->
+    <div class="modal-overlay" id="review-modal">
+        <div class="review-card">
+            <h3 class="review-title" id="modal-title">新游评测简报</h3>
+            
+            <div class="rating-box">
+                <span class="rating-num" id="modal-rating">9.5</span>
+                <div class="rating-stars" id="modal-stars">
+                    <!-- 动态高亮星星 -->
+                </div>
+            </div>
+
+            <div class="review-list" id="modal-reviews">
+                <!-- 动态评论内容 -->
+            </div>
+
+            <button class="btn-modal-close" onclick="closeReviewModal()">
+                宣布推向市场并开启推广！
+            </button>
+        </div>
+    </div>
+
+    <!-- 4.3 随机事件模态框 -->
+    <div class="modal-overlay" id="event-modal">
+        <div class="event-card">
+            <h3 class="event-title" id="event-modal-title"><i class="fa-solid fa-circle-exclamation"></i>突发紧急事件</h3>
+            <p class="event-desc" id="event-modal-desc">事件描述</p>
+            <div class="event-choices" id="event-modal-choices">
+                <!-- 动态按钮选项 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       5. 游戏Tycoon引擎逻辑 (Simulator Engine Script)
+       ========================================================================== -->
+    <script>
+        // 游戏数据定义
+        const PLATFORMS_DATA = {
+            "Mobile": { name: "手机端", cost: 0, scale: 1.0, icon: "fa-mobile-screen-button" },
+            "TikTok": { name: "抖音小游戏", cost: 5000, scale: 1.3, icon: "fa-circle-play" },
+            "PC": { name: "Steam商店", cost: 15000, scale: 2.0, icon: "fa-steam" },
+            "Console": { name: "次时代主机", cost: 40000, scale: 3.5, icon: "fa-gamepad" }
+        };
+
+        const GENRES_DATA = {
+            "Casual": { name: "消除休闲", cost: 0, ratio: { code: 0.3, art: 0.4, design: 0.3 }, icon: "fa-shapes" },
+            "RPG": { name: "角色扮演", cost: 8000, ratio: { code: 0.4, art: 0.3, design: 0.3 }, icon: "fa-dragon" },
+            "Roguelike": { name: "动作地牢", cost: 15000, ratio: { code: 0.4, art: 0.2, design: 0.4 }, icon: "fa-skull" },
+            "Tycoon": { name: "模拟经营", cost: 25000, ratio: { code: 0.3, art: 0.2, design: 0.5 }, icon: "fa-chess" }
+        };
+
+        const TOPICS_DATA = {
+            "Laborer": { name: "打工逆袭", cost: 0, bestGenres: ["Casual", "Tycoon"], icon: "fa-user-gear" },
+            "Space": { name: "科幻深空", cost: 6000, bestGenres: ["RPG", "Roguelike"], icon: "fa-user-astronaut" },
+            "Cyberpunk": { name: "赛博都市", cost: 12000, bestGenres: ["RPG", "Roguelike"], icon: "fa-mask" },
+            "Retro": { name: "像素复古", cost: 18000, bestGenres: ["Casual", "Roguelike"], icon: "fa-cubes" }
+        };
+
+        const RANDOM_NAMES = ["张三", "李四", "王五", "小智", "阿伟", "老陈", "阿强", "小美", "大壮", "杰克", "露西", "艾伦"];
+
+        // 默认初始化存档状态
+        let gameState = {
+            companyName: "星屑网络工作室",
+            funds: 50000,
+            fans: 100,
+            rp: 10,
+            date: { year: 1, month: 1, week: 1 },
+            employees: [
+                { id: "player", name: "创始人(您)", role: "designer", stats: { code: 15, art: 10, design: 20 }, salary: 0, level: 1, xp: 0 }
+            ],
+            unlockedGenres: ["Casual"],
+            unlockedTopics: ["Laborer"],
+            unlockedPlatforms: ["Mobile"],
+            releases: [],
+            currentProject: null,
+            lastIncome: 0,
+            activeTrend: { genre: "Casual", topic: "Laborer" }
+        };
+
+        // 临时招聘池
+        let hiringPool = [];
+        let activeResearchTab = "genre";
+        let loopInterval = null;
+
+        // 初始化游戏页面
+        window.onload = function() {
+            loadGame();
+            generateHiringPool();
+            updateStatsUI();
+            switchScreen('office');
+            
+            // 开启游戏主时钟 (每周 3.5 秒)
+            loopInterval = setInterval(gameTick, 3500);
+            
+            // 如果是在开发中，直接拉回开发遮罩
+            if (gameState.currentProject) {
+                showDevelopmentOverlay();
+            }
+        };
+
+        // ==========================================================================
+        // 核心时钟 (Game Tick Loop)
+        // ==========================================================================
+        function gameTick() {
+            // 递增周数
+            gameState.date.week++;
+            if (gameState.date.week > 4) {
+                gameState.date.week = 1;
+                gameState.date.month++;
+                if (gameState.date.month > 12) {
+                    gameState.date.month = 1;
+                    gameState.date.year++;
+                }
+            }
+
+            // 处理每周支出 (租金与员工工资)
+            const weeklyWages = gameState.employees.reduce((sum, emp) => sum + emp.salary, 0);
+            const weeklyRent = 500; // 固定租金
+            const totalOut = weeklyWages + weeklyRent;
+            
+            gameState.funds -= totalOut;
+            
+            // 处理每日销量带来的持续收益
+            let weeklySales = 0;
+            gameState.releases.forEach(game => {
+                if (game.weeksSinceRelease < 16) { // 游戏只卖 16 周
+                    // 收益计算衰减
+                    const decay = Math.pow(0.75, game.weeksSinceRelease);
+                    let baseRevenue = game.rating * 1500 * (1 + gameState.fans * 0.002) * PLATFORMS_DATA[game.platform].scale;
+                    let thisWeekRev = Math.round(baseRevenue * decay);
+                    weeklySales += thisWeekRev;
+                    game.revenueGenerated += thisWeekRev;
+                    game.weeksSinceRelease++;
+                }
+            });
+
+            gameState.funds += weeklySales;
+            gameState.lastIncome = weeklySales - totalOut;
+
+            // 闲置状态下员工积累研发点 (RP)
+            if (!gameState.currentProject) {
+                gameState.employees.forEach(emp => {
+                    // 每个人闲置时有几率积累 RP
+                    if (Math.random() < 0.25) {
+                        gameState.rp += Math.round(emp.level * (Math.random() > 0.5 ? 1 : 2));
+                    }
+                });
+            } else {
+                // 如果在开发中，处理开发进度
+                developProgressTick();
+            }
+
+            // 偶尔更新热门趋势 (20% 概率)
+            if (Math.random() < 0.1) {
+                updateTrends();
+            }
+
+            // 偶尔触发随机事件 (8% 概率)
+            if (Math.random() < 0.08) {
+                triggerRandomEvent();
+            }
+
+            // 数据检测，若资金赤字严重提示游戏结束 (破产)
+            if (gameState.funds < -30000) {
+                triggerBankruptcy();
+            }
+
+            // 保存进度并更新界面
+            saveGame();
+            updateStatsUI();
+            
+            // 重刷当前视图
+            refreshActiveScreen();
+        }
+
+        // ==========================================================================
+        // 开发模块 (Game R&D Engine)
+        // ==========================================================================
+        let selectedPlatform = "Mobile";
+        let selectedGenre = "Casual";
+        let selectedTopic = "Laborer";
+
+        function setupDevelopForm() {
+            // 加载平台
+            const platContainer = document.getElementById("dev-platforms");
+            platContainer.innerHTML = "";
+            gameState.unlockedPlatforms.forEach(platKey => {
+                const plat = PLATFORMS_DATA[platKey];
+                const btn = document.createElement("button");
+                btn.className = `select-btn ${selectedPlatform === platKey ? 'selected' : ''}`;
+                btn.onclick = () => { selectedPlatform = platKey; setupDevelopForm(); };
+                btn.innerHTML = `<span><i class="fa-brands ${plat.icon}"></i> ${plat.name}</span><span class="btn-cost">配额金 ¥${plat.cost}</span>`;
+                platContainer.appendChild(btn);
+            });
+
+            // 加载类型
+            const genreContainer = document.getElementById("dev-genres");
+            genreContainer.innerHTML = "";
+            gameState.unlockedGenres.forEach(genreKey => {
+                const genre = GENRES_DATA[genreKey];
+                const btn = document.createElement("button");
+                btn.className = `select-btn ${selectedGenre === genreKey ? 'selected' : ''}`;
+                btn.onclick = () => { selectedGenre = genreKey; setupDevelopForm(); };
+                btn.innerHTML = `<span><i class="fa-solid ${genre.icon}"></i> ${genre.name}</span><span class="btn-cost">配额金 ¥${genre.cost}</span>`;
+                genreContainer.appendChild(btn);
+            });
+
+            // 加载题材
+            const topicContainer = document.getElementById("dev-topics");
+            topicContainer.innerHTML = "";
+            gameState.unlockedTopics.forEach(topicKey => {
+                const topic = TOPICS_DATA[topicKey];
+                const btn = document.createElement("button");
+                btn.className = `select-btn ${selectedTopic === topicKey ? 'selected' : ''}`;
+                btn.onclick = () => { selectedTopic = topicKey; setupDevelopForm(); };
+                btn.innerHTML = `<span><i class="fa-solid ${topic.icon}"></i> ${topic.name}</span><span class="btn-cost">可选题材</span>`;
+                topicContainer.appendChild(btn);
+            });
+        }
+
+        function startDevelopment() {
+            const nameInput = document.getElementById("dev-name").value.trim();
+            const gameName = nameInput || `星屑秘境 ${Math.floor(Math.random()*100)}`;
+            
+            // 计算成本
+            const platCost = PLATFORMS_DATA[selectedPlatform].cost;
+            const genreCost = GENRES_DATA[selectedGenre].cost;
+            const topicCost = TOPICS_DATA[selectedTopic].cost;
+            const totalCost = platCost + genreCost + topicCost + 1000; // +1000 基础材料成本
+
+            if (gameState.funds < totalCost) {
+                alert("资金不足以启动该规模的项目开发！");
+                return;
+            }
+
+            gameState.funds -= totalCost;
+            
+            // 初始化当前项目
+            gameState.currentProject = {
+                name: gameName,
+                platform: selectedPlatform,
+                genre: selectedGenre,
+                topic: selectedTopic,
+                progress: 0,
+                code: 0,
+                art: 0,
+                design: 0,
+                bugs: 0,
+                state: "coding" // coding, debugging, finished
+            };
+
+            saveGame();
+            updateStatsUI();
+            showDevelopmentOverlay();
+        }
+
+        function showDevelopmentOverlay() {
+            const overlay = document.getElementById("development-overlay");
+            overlay.classList.add("active");
+            
+            const proj = gameState.currentProject;
+            document.getElementById("overlay-game-name").innerText = proj.name;
+            document.getElementById("overlay-game-meta").innerHTML = `
+                <i class="fa-solid ${GENRES_DATA[proj.genre].icon}"></i> ${GENRES_DATA[proj.genre].name} | 
+                <i class="fa-brands ${PLATFORMS_DATA[proj.platform].icon}"></i> ${PLATFORMS_DATA[proj.platform].name}
+            `;
+            
+            updateDevStatsUI();
+        }
+
+        function updateDevStatsUI() {
+            const proj = gameState.currentProject;
+            if (!proj) return;
+
+            document.getElementById("overlay-progress").innerText = `${Math.floor(proj.progress)}%`;
+            document.getElementById("overlay-progress-bar").style.width = `${proj.progress}%`;
+            
+            document.getElementById("overlay-code").innerText = Math.floor(proj.code);
+            document.getElementById("overlay-art").innerText = Math.floor(proj.art);
+            document.getElementById("overlay-design").innerText = Math.floor(proj.design);
+            document.getElementById("overlay-bugs").innerText = Math.floor(proj.bugs);
+
+            const btn = document.getElementById("dev-action-btn");
+            if (proj.state === "coding") {
+                btn.className = "btn-dev-action disabled";
+                btn.innerText = "开发中，员工正在输出技术力...";
+                btn.disabled = true;
+            } else if (proj.state === "debugging") {
+                btn.className = "btn-dev-action bug-fixing";
+                btn.innerText = "开发完成！点击开始测试修复Bug";
+                btn.disabled = false;
+            } else if (proj.state === "finished") {
+                btn.className = "btn-dev-action release";
+                btn.innerText = "测试完成！宣布正式发布上线";
+                btn.disabled = false;
+            }
+        }
+
+        function developProgressTick() {
+            const proj = gameState.currentProject;
+            if (!proj || proj.state !== "coding") return;
+
+            // 每周根据雇员能力递增点数
+            gameState.employees.forEach((emp, index) => {
+                // 根据工种产生相对应的点数
+                let codeGen = 0, artGen = 0, desGen = 0;
+                
+                if (emp.role === "programmer") {
+                    codeGen = (emp.stats.code * 0.4) + Math.random() * 5;
+                    desGen = (emp.stats.design * 0.1);
+                } else if (emp.role === "artist") {
+                    artGen = (emp.stats.art * 0.45) + Math.random() * 5;
+                } else if (emp.role === "designer") {
+                    desGen = (emp.stats.design * 0.45) + Math.random() * 5;
+                    codeGen = (emp.stats.code * 0.1);
+                }
+
+                // 产生 Bug 的概率
+                let bugChance = 0.15;
+                if (Math.random() < bugChance) {
+                    proj.bugs += Math.floor(Math.random() * 3) + 1;
+                    spawnFloatingText("BUG+", "overlay-bugs", "bug");
+                }
+
+                // 累加属性
+                proj.code += codeGen;
+                proj.art += artGen;
+                proj.design += desGen;
+
+                // 飘字动画效果
+                if (codeGen > 2) spawnFloatingText(`+${Math.round(codeGen)}`, "overlay-code", "code");
+                if (artGen > 2) spawnFloatingText(`+${Math.round(artGen)}`, "overlay-art", "art");
+                if (desGen > 2) spawnFloatingText(`+${Math.round(desGen)}`, "overlay-design", "design");
+            });
+
+            // 增加开发进度 (进度速度由所有员工总效率决定)
+            const teamPower = gameState.employees.reduce((sum, emp) => sum + (emp.stats.code + emp.stats.art + emp.stats.design), 0);
+            const baseProgressStep = (teamPower * 0.08) + 10;
+            proj.progress += baseProgressStep;
+
+            if (proj.progress >= 100) {
+                proj.progress = 100;
+                proj.state = "debugging";
+            }
+
+            updateDevStatsUI();
+        }
+
+        function triggerDevAction() {
+            const proj = gameState.currentProject;
+            if (!proj) return;
+
+            if (proj.state === "debugging") {
+                // 点击修复 Bug
+                let qaPower = gameState.employees.reduce((sum, emp) => sum + emp.stats.code, 0) + 10;
+                let fixCount = Math.round(qaPower * 0.4 + 2);
+                proj.bugs -= fixCount;
+                if (proj.bugs <= 0) {
+                    proj.bugs = 0;
+                    proj.state = "finished";
+                }
+                updateDevStatsUI();
+            } else if (proj.state === "finished") {
+                // 点击发布游戏，进行结算和模态框显示
+                releaseGame();
+            }
+        }
+
+        function releaseGame() {
+            const proj = gameState.currentProject;
+            if (!proj) return;
+
+            // 评估分数算法
+            const totalPoints = proj.code + proj.art + proj.design;
+            const platformTarget = PLATFORMS_DATA[proj.platform].scale * 150; // 主机要求最高
+            
+            // 契合度与热门趋势检查
+            let bonus = 1.0;
+            const topic = TOPICS_DATA[proj.topic];
+            if (topic.bestGenres.includes(proj.genre)) {
+                bonus += 0.2; // 完美匹配 1.2
+            }
+            if (gameState.activeTrend.genre === proj.genre) bonus += 0.15;
+            if (gameState.activeTrend.topic === proj.topic) bonus += 0.15;
+
+            // 最终品质打分
+            let baseScore = (totalPoints / platformTarget) * 6 * bonus;
+            if (baseScore > 9.9) baseScore = 9.9;
+            if (baseScore < 3.0) baseScore = 3.0 + Math.random()*2;
+            const finalScore = parseFloat(baseScore.toFixed(1));
+
+            // 生成评论列表
+            const reviews = generateReviewComments(proj, finalScore);
+            
+            // 生成游戏结果
+            const release = {
+                name: proj.name,
+                platform: proj.platform,
+                genre: proj.genre,
+                topic: proj.topic,
+                rating: finalScore,
+                weeksSinceRelease: 0,
+                revenueGenerated: 0,
+                fansGained: Math.round(finalScore * finalScore * 25 * bonus)
+            };
+
+            gameState.releases.unshift(release);
+            gameState.fans += release.fansGained;
+            gameState.currentProject = null; // 清空项目
+
+            // 隐藏开发遮罩，弹出评测模态框
+            document.getElementById("development-overlay").classList.remove("active");
+            showReviewModal(release, reviews);
+        }
+
+        // ==========================================================================
+        // 评测报告
+        // ==========================================================================
+        function generateReviewComments(proj, score) {
+            let list = [];
+            const isGood = score >= 7.5;
+            const isBad = score < 5.5;
+
+            // 1. 策划评论
+            let plannerComment = "";
+            if (isGood) {
+                plannerComment = `题材《${TOPICS_DATA[proj.topic].name}》的创意很有诚意，核心关卡很有粘性！`;
+            } else if (isBad) {
+                plannerComment = `玩法比较匮乏，感觉根本没有抓住玩家的情感痛点。`;
+            } else {
+                plannerComment = `核心机制还行，不过缺乏让人眼前一亮的惊喜点，中规中矩。`;
+            }
+            list.push({ reviewer: "抖音小游戏前哨站", text: plannerComment, score: Math.round(score + (Math.random() - 0.5)) });
+
+            // 2. 美术评论
+            let artComment = "";
+            if (proj.art > proj.code * 1.5) {
+                artComment = `美术表现极其惊艳！色彩搭配极具艺术冲击力。`;
+            } else if (isBad) {
+                artComment = `画面素材有些简陋，感觉像是临时凑来的素材。`;
+            } else {
+                artComment = `视觉效果还可以，能够保障游戏的基本沉浸感。`;
+            }
+            list.push({ reviewer: "星屑游民画报", text: artComment, score: Math.round(score + (Math.random() - 0.5)) });
+
+            // 3. 极客技术评论
+            let techComment = "";
+            if (score > 8.0) {
+                techComment = `流畅度拉满，抖音小游戏的加载优化做到了行业顶尖水平，无卡顿。`;
+            } else if (isBad) {
+                techComment = `代码优化极差，不仅卡顿，而且有几处导致崩溃的严重隐患。`;
+            } else {
+                techComment = `整体运行平稳，技术表现符合同品类平均水平。`;
+            }
+            list.push({ reviewer: "Geek极客评测", text: techComment, score: Math.round(score + (Math.random() - 0.5)) });
+
+            return list;
+        }
+
+        function showReviewModal(release, reviews) {
+            document.getElementById("review-modal").classList.add("active");
+            document.getElementById("modal-rating").innerText = release.rating;
+            
+            // 星星渲染
+            const starContainer = document.getElementById("modal-stars");
+            starContainer.innerHTML = "";
+            const starCount = Math.round(release.rating / 2);
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement("i");
+                star.className = i < starCount ? "fa-solid fa-star" : "fa-regular fa-star";
+                starContainer.appendChild(star);
+            }
+
+            // 评论渲染
+            const reviewContainer = document.getElementById("modal-reviews");
+            reviewContainer.innerHTML = "";
+            reviews.forEach(rev => {
+                const item = document.createElement("div");
+                item.className = "review-item";
+                item.innerHTML = `
+                    <div class="reviewer-meta">
+                        <span class="reviewer-name">${rev.reviewer}</span>
+                        <span class="reviewer-score">${rev.score}分</span>
+                    </div>
+                    <p class="review-text">“${rev.text}”</p>
+                `;
+                reviewContainer.appendChild(item);
+            });
+        }
+
+        function closeReviewModal() {
+            document.getElementById("review-modal").classList.remove("active");
+            switchScreen('office');
+        }
+
+        // ==========================================================================
+        // 招募雇员模块
+        // ==========================================================================
+        function generateHiringPool() {
+            hiringPool = [];
+            const roles = ["designer", "programmer", "artist"];
+            
+            for (let i = 0; i < 3; i++) {
+                const role = roles[i];
+                const rName = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)] + (Math.random() > 0.5 ? "姐" : "哥");
+                
+                // 属性浮动
+                const seed = Math.random();
+                const code = Math.round(role === "programmer" ? 25 + seed * 30 : 5 + seed * 15);
+                const art = Math.round(role === "artist" ? 28 + seed * 28 : 5 + seed * 15);
+                const design = Math.round(role === "designer" ? 26 + seed * 30 : 8 + seed * 12);
+                
+                const salary = Math.round((code + art + design) * 22 + 500);
+                const cost = Math.round(salary * 2); // 招聘费
+
+                hiringPool.push({
+                    name: rName,
+                    role: role,
+                    stats: { code, art, design },
+                    salary: salary,
+                    cost: cost,
+                    level: 1
+                });
+            }
+        }
+
+        function loadStaffRecruits() {
+            const list = document.getElementById("hiring-list");
+            list.innerHTML = "";
+
+            hiringPool.forEach((cand, idx) => {
+                const card = document.createElement("div");
+                card.className = "candidate-card";
+                
+                let iconClass = "fa-laptop-code";
+                let roleColor = "var(--accent-neon)";
+                let roleName = "程序员";
+                if (cand.role === "artist") { roleColor = "var(--accent-pink)"; roleName = "美术设计师"; iconClass = "fa-palette"; }
+                if (cand.role === "designer") { roleColor = "var(--accent-yellow)"; roleName = "核心策划"; iconClass = "fa-lightbulb"; }
+
+                card.innerHTML = `
+                    <div class="candidate-header">
+                        <div class="candidate-info">
+                            <div class="staff-avatar ${cand.role}">
+                                <i class="fa-solid ${iconClass}"></i>
+                            </div>
+                            <div class="staff-profile">
+                                <span class="staff-name">${cand.name}</span>
+                                <span class="staff-level" style="color: ${roleColor}">${roleName}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="candidate-skills">
+                        <div class="candidate-skill">
+                            <span class="candidate-skill-val" style="color: var(--accent-neon);">${cand.stats.code}</span>
+                            <span class="candidate-skill-lbl">代码</span>
+                        </div>
+                        <div class="candidate-skill">
+                            <span class="candidate-skill-val" style="color: var(--accent-pink);">${cand.stats.art}</span>
+                            <span class="candidate-skill-lbl">美术</span>
+                        </div>
+                        <div class="candidate-skill">
+                            <span class="candidate-skill-val" style="color: var(--accent-yellow);">${cand.stats.design}</span>
+                            <span class="candidate-skill-lbl">策划</span>
+                        </div>
+                    </div>
+                    <div class="candidate-salary-box">
+                        <span class="list-lbl">期望周薪</span>
+                        <span class="candidate-salary">¥${cand.salary}</span>
+                    </div>
+                    <button class="btn-hire" onclick="hireCandidate(${idx})">
+                        签订雇佣合同 (手续费 ¥${cand.cost})
+                    </button>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function hireCandidate(idx) {
+            const cand = hiringPool[idx];
+            if (gameState.employees.length >= 5) {
+                alert("当前办公室卡座已满！无法招募新员工（最大 5 人）。");
+                return;
+            }
+            if (gameState.funds < cand.cost) {
+                alert("资金不足以支付入职雇佣手续费！");
+                return;
+            }
+
+            gameState.funds -= cand.cost;
+            gameState.employees.push({
+                name: cand.name,
+                role: cand.role,
+                stats: cand.stats,
+                salary: cand.salary,
+                level: 1,
+                xp: 0
+            });
+
+            // 移除招募池中的该候选人并重新加载招募列表
+            hiringPool.splice(idx, 1);
+            generateHiringPool(); // 再次补充
+            saveGame();
+            updateStatsUI();
+            loadStaffRecruits();
+            alert(`恭喜！${cand.name} 已成功入职！`);
+        }
+
+        function trainEmployee(idx) {
+            const emp = gameState.employees[idx];
+            const cost = emp.level * 4000;
+            if (gameState.funds < cost) {
+                alert("资金不足以支付员工培训费！");
+                return;
+            }
+
+            gameState.funds -= cost;
+            emp.level++;
+            
+            // 提升属性
+            if (emp.role === "programmer") {
+                emp.stats.code += Math.floor(Math.random() * 8) + 5;
+                emp.stats.design += Math.floor(Math.random() * 3) + 1;
+            } else if (emp.role === "artist") {
+                emp.stats.art += Math.floor(Math.random() * 8) + 5;
+            } else if (emp.role === "designer") {
+                emp.stats.design += Math.floor(Math.random() * 8) + 5;
+                emp.stats.code += Math.floor(Math.random() * 3) + 1;
+            }
+
+            // 加薪
+            emp.salary = Math.round(emp.salary * 1.25);
+
+            saveGame();
+            updateStatsUI();
+            loadOfficeDesks();
+            alert(`${emp.name} 完成了深度技术培训！等级提升到 Lv.${emp.level}，全属性增长！`);
+        }
+
+        // ==========================================================================
+        // 科技研究模块
+        // ==========================================================================
+        const RESEARCH_DATABASE = {
+            genre: {
+                "RPG": { name: "角色扮演 (RPG)", desc: "解锁后可以研发重度硬核角色扮演游戏，盈利上限更高。", cost: 15 },
+                "Roguelike": { name: "地牢冒险 (Roguelike)", desc: "解锁后可以研发随机地牢动作类游戏，极其受核心玩家欢迎。", cost: 25 },
+                "Tycoon": { name: "模拟经营 (Tycoon)", desc: "研发具有深度的策略模拟经营游戏，粉丝增长效率极佳。", cost: 40 }
+            },
+            topic: {
+                "Space": { name: "科幻深空", desc: "太空歌剧与硬科幻背景，是科幻爱好者的首选主题。", cost: 10 },
+                "Cyberpunk": { name: "赛博都市", desc: "霓虹美学与高科技低生活题材，拥有极强的视觉可塑性。", cost: 20 },
+                "Retro": { name: "像素复古", desc: "老派怀旧风，用最纯粹的游戏玩法打动玩家。", cost: 30 }
+            },
+            platform: {
+                "TikTok": { name: "抖音小游戏生态", desc: "解锁接入抖音推荐算法，大幅提升轻度游戏的销量上限。", cost: 12 },
+                "PC": { name: "Steam商店发行", desc: "发行至全球最大的个人电脑游戏平台，高定价高销量上限。", cost: 28 },
+                "Console": { name: "索尼/任天堂主机端", desc: "进军最重度的家庭娱乐主机阵营，品质要求极苛刻但口碑爆炸。", cost: 50 }
+            }
+        };
+
+        function switchResearchTab(tab, btn) {
+            activeResearchTab = tab;
+            
+            // 切换按钮高亮
+            const links = document.querySelectorAll(".research-tabs .tab-link");
+            links.forEach(l => l.classList.remove("active"));
+            btn.classList.add("active");
+
+            loadResearchTree();
+        }
+
+        function loadResearchTree() {
+            const container = document.getElementById("research-list");
+            container.innerHTML = "";
+
+            const db = RESEARCH_DATABASE[activeResearchTab];
+            Object.keys(db).forEach(key => {
+                const item = db[key];
+                
+                // 判断是否已解锁
+                let isUnlocked = false;
+                if (activeResearchTab === "genre") isUnlocked = gameState.unlockedGenres.includes(key);
+                if (activeResearchTab === "topic") isUnlocked = gameState.unlockedTopics.includes(key);
+                if (activeResearchTab === "platform") isUnlocked = gameState.unlockedPlatforms.includes(key);
+
+                const card = document.createElement("div");
+                card.className = "research-card";
+                card.innerHTML = `
+                    <div class="research-info">
+                        <span class="research-name">${item.name}</span>
+                        <p class="research-desc">${item.desc}</p>
+                    </div>
+                    <div class="research-action">
+                        <span class="research-cost"><i class="fa-solid fa-lightbulb"></i> ${item.cost} RP</span>
+                        <button class="btn-research" ${isUnlocked || gameState.rp < item.cost ? 'disabled' : ''} onclick="researchTech('${key}')">
+                            ${isUnlocked ? '已成功研发' : '启动科技攻关'}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function researchTech(key) {
+            const db = RESEARCH_DATABASE[activeResearchTab];
+            const item = db[key];
+
+            if (gameState.rp < item.cost) {
+                alert("您的研发点数 (RP) 不足！");
+                return;
+            }
+
+            gameState.rp -= item.cost;
+            if (activeResearchTab === "genre") gameState.unlockedGenres.push(key);
+            if (activeResearchTab === "topic") gameState.unlockedTopics.push(key);
+            if (activeResearchTab === "platform") gameState.unlockedPlatforms.push(key);
+
+            saveGame();
+            updateStatsUI();
+            loadResearchTree();
+            alert(`恭喜！已成功解锁《${item.name}》科技，立项时可用！`);
+        }
+
+        // ==========================================================================
+        // 突发事件引擎
+        // ==========================================================================
+        const EVENTS_POOL = [
+            {
+                title: "粉丝的疯狂来信",
+                desc: "有一位您的核心粉丝给工作室寄来一封信，表达了他对你们消除类游戏的热爱，并附赠了一张 ¥2,000 的赞助卡。但也有一群玩家抱怨你们没有出新题材，你打算怎么回应？",
+                choices: [
+                    { text: "收下资金，给玩家发送一封感谢信", action: () => { gameState.funds += 2000; updateStatsUI(); alert("资金增加 ¥2,000"); } },
+                    { text: "用 ¥3,000 举办线上粉丝见面会，回馈社区", action: () => { if (gameState.funds < 3000) return alert("资金不足！"); gameState.funds -= 3000; gameState.fans += 500; updateStatsUI(); alert("粉丝增加 500 人"); } }
+                ]
+            },
+            {
+                title: "发行商独占诱惑",
+                desc: "抖音知名发行大厂找到你们，承诺如果你们下一款游戏选择由他们代理发行，将立即一次性打款 ¥20,000 支持，但是这会抽走下款游戏 40% 的总分成。",
+                choices: [
+                    { text: "同意代理协议，先拿钱再说！", action: () => { gameState.funds += 20000; updateStatsUI(); alert("启动资金增加 ¥20,000"); } },
+                    { text: "拒绝大厂代理，坚持自主运营独立自强", action: () => { gameState.fans += 200; updateStatsUI(); alert("独立精神感动了社区，粉丝增长 200 人"); } }
+                ]
+            },
+            {
+                title: "核心代码大崩溃",
+                desc: "深夜开发时，一处服务器接口突然崩盘。程序员表示如果花 ¥4,000 购买云备份组件可以瞬间修复；否则必须全员加班，全工作室点数暂时下跌。",
+                choices: [
+                    { text: "紧急出钱购买云备份组件修复", action: () => { if (gameState.funds < 4000) return alert("资金不足！"); gameState.funds -= 4000; updateStatsUI(); alert("危机解除"); } },
+                    { text: "拒绝花冤枉钱，全体留下来加班维护", action: () => { gameState.employees.forEach(e => { e.stats.code = Math.max(1, e.stats.code - 2); }); alert("程序员过度劳累，代码开发能力下降"); } }
+                ]
+            }
+        ];
+
+        function triggerRandomEvent() {
+            const ev = EVENTS_POOL[Math.floor(Math.random() * EVENTS_POOL.length)];
+            
+            document.getElementById("event-modal").classList.add("active");
+            document.getElementById("event-modal-title").innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${ev.title}`;
+            document.getElementById("event-modal-desc").innerText = ev.desc;
+            
+            const btnContainer = document.getElementById("event-modal-choices");
+            btnContainer.innerHTML = "";
+            ev.choices.forEach(ch => {
+                const btn = document.createElement("button");
+                btn.className = "choice-btn";
+                btn.innerText = ch.text;
+                btn.onclick = () => {
+                    ch.action();
+                    document.getElementById("event-modal").classList.remove("active");
+                };
+                btnContainer.appendChild(btn);
+            });
+        }
+
+        // ==========================================================================
+        // 辅助渲染与主逻辑
+        // ==========================================================================
+        
+        // 切换视图面板
+        function switchScreen(screenId) {
+            // 切换导航条
+            const navItems = document.querySelectorAll(".nav-menu .nav-item");
+            navItems.forEach(item => item.classList.remove("active"));
+            
+            const activeNav = document.getElementById(`nav-${screenId}`);
+            if (activeNav) activeNav.classList.add("active");
+
+            // 切换大屏
+            const screens = document.querySelectorAll(".screen-panel");
+            screens.forEach(screen => screen.classList.remove("active"));
+            
+            const activeScreen = document.getElementById(`panel-${screenId}`);
+            if (activeScreen) activeScreen.classList.add("active");
+
+            // 特殊页面数据刷新
+            if (screenId === "office") loadOfficeDesks();
+            if (screenId === "develop") setupDevelopForm();
+            if (screenId === "staff") loadStaffRecruits();
+            if (screenId === "research") loadResearchTree();
+            if (screenId === "history") loadHistoryReleases();
+        }
+
+        function refreshActiveScreen() {
+            const activeNav = document.querySelector(".nav-menu .nav-item.active");
+            if (!activeNav) return;
+            const screenId = activeNav.id.replace("nav-", "");
+            if (screenId === "office") loadOfficeDesks();
+            if (screenId === "history") loadHistoryReleases();
+        }
+
+        // 渲染办公室列表
+        function loadOfficeDesks() {
+            const container = document.getElementById("office-desks");
+            container.innerHTML = "";
+
+            // 循环遍历渲染 5 个卡座
+            for (let i = 0; i < 5; i++) {
+                const emp = gameState.employees[i];
+                const card = document.createElement("div");
+                card.className = "desk-card";
+
+                if (emp) {
+                    let iconClass = "fa-laptop-code";
+                    let roleName = "程序员";
+                    if (emp.role === "artist") { roleName = "美术设计师"; iconClass = "fa-palette"; }
+                    if (emp.role === "designer") { roleName = "核心策划"; iconClass = "fa-lightbulb"; }
+
+                    card.innerHTML = `
+                        <div class="staff-avatar-box">
+                            <div class="staff-avatar ${emp.role}">
+                                <i class="fa-solid ${iconClass}"></i>
+                                <span class="staff-role-badge">Lv</span>
+                            </div>
+                            <div class="staff-profile">
+                                <span class="staff-name">${emp.name}</span>
+                                <span class="staff-level">${roleName} | 等级 Lv.${emp.level}</span>
+                            </div>
+                        </div>
+                        <div class="staff-skills">
+                            <div class="skill-stat">
+                                <span class="skill-val code">${emp.stats.code}</span>
+                                <span class="skill-lbl">代码</span>
+                            </div>
+                            <div class="skill-stat">
+                                <span class="skill-val art">${emp.stats.art}</span>
+                                <span class="skill-lbl">美术</span>
+                            </div>
+                            <div class="skill-stat">
+                                <span class="skill-val design">${emp.stats.design}</span>
+                                <span class="skill-lbl">设计</span>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn-research" style="border-color: var(--accent-yellow); color: var(--accent-yellow);" onclick="trainEmployee(${i})">
+                                精英培训 (¥${emp.level * 4000})
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    // 空卡座
+                    card.innerHTML = `
+                        <div class="staff-avatar-box" style="opacity: 0.4;">
+                            <div class="staff-avatar" style="border-color: rgba(255,255,255,0.1); color: var(--text-secondary);">
+                                <i class="fa-solid fa-chair"></i>
+                            </div>
+                            <div class="staff-profile">
+                                <span class="staff-name" style="color: var(--text-secondary);">空置开发卡座</span>
+                                <span class="staff-level">前往人才招募中心扩大团队</span>
+                            </div>
+                        </div>
+                        <button class="btn-research" onclick="switchScreen('staff')">
+                            快速招募员工
+                        </button>
+                    `;
+                }
+                container.appendChild(card);
+            }
+        }
+
+        // 渲染作品陈列室
+        function loadHistoryReleases() {
+            const list = document.getElementById("history-releases");
+            list.innerHTML = "";
+
+            if (gameState.releases.length === 0) {
+                list.innerHTML = `<p style="text-align: center; color: var(--text-secondary); margin-top: 3rem;">尚未发布任何一款游戏，请前往左侧启动研发！</p>`;
+                return;
+            }
+
+            gameState.releases.forEach(game => {
+                const item = document.createElement("div");
+                item.className = "history-item";
+                item.innerHTML = `
+                    <div class="game-title-box">
+                        <span class="game-title">${game.name}</span>
+                        <span class="game-metadata">${TOPICS_DATA[game.topic].name} | ${GENRES_DATA[game.genre].name}</span>
+                    </div>
+                    <div class="game-rating-box">
+                        <i class="fa-solid fa-star"></i>口碑分 ${game.rating}
+                    </div>
+                    <div class="history-stat-box">
+                        <span class="history-stat-lbl">目标渠道</span>
+                        <span class="history-stat-val" style="color: var(--accent-neon);">${PLATFORMS_DATA[game.platform].name}</span>
+                    </div>
+                    <div class="history-stat-box">
+                        <span class="history-stat-lbl">积累粉丝</span>
+                        <span class="history-stat-val" style="color: var(--accent-pink);">+${game.fansGained} 人</span>
+                    </div>
+                    <div class="history-stat-box">
+                        <span class="history-stat-lbl">创造毛利</span>
+                        <span class="history-stat-val" style="color: var(--accent-yellow);">¥${game.revenueGenerated}</span>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        // 渲染顶部数据
+        function updateStatsUI() {
+            document.getElementById("stat-funds").innerText = `¥${gameState.funds.toLocaleString()}`;
+            document.getElementById("stat-fans").innerText = gameState.fans.toLocaleString();
+            document.getElementById("stat-rp").innerText = gameState.rp;
+            document.getElementById("stat-date").innerText = `第 ${gameState.date.year} 年 ${gameState.date.month} 月 ${gameState.date.week} 周`;
+
+            // 侧栏简报更新
+            document.getElementById("aside-released-count").innerText = `${gameState.releases.length} 款`;
+            const inc = document.getElementById("aside-last-income");
+            inc.innerText = `${gameState.lastIncome >= 0 ? '+' : ''}¥${gameState.lastIncome.toLocaleString()}`;
+            inc.style.color = gameState.lastIncome >= 0 ? "var(--accent-neon)" : "var(--accent-pink)";
+
+            const weeklyWages = gameState.employees.reduce((sum, emp) => sum + emp.salary, 0);
+            document.getElementById("aside-weekly-wages").innerText = `¥${weeklyWages}`;
+            document.getElementById("aside-weekly-rent").innerText = `¥500`;
+
+            // 趋势更新
+            document.getElementById("aside-trend-genre").innerText = GENRES_DATA[gameState.activeTrend.genre].name;
+            document.getElementById("aside-trend-topic").innerText = TOPICS_DATA[gameState.activeTrend.topic].name;
+        }
+
+        // 更新大趋势
+        function updateTrends() {
+            const genres = Object.keys(GENRES_DATA);
+            const topics = Object.keys(TOPICS_DATA);
+            gameState.activeTrend.genre = genres[Math.floor(Math.random() * genres.length)];
+            gameState.activeTrend.topic = topics[Math.floor(Math.random() * topics.length)];
+            
+            // 弹出轻微通知提示
+            spawnFloatingText("市场趋势发生偏转！", "stat-date", "design");
+        }
+
+        // 飘字特效生成器
+        function spawnFloatingText(text, targetId, className) {
+            const targetEl = document.getElementById(targetId);
+            if (!targetEl) return;
+
+            const rect = targetEl.getBoundingClientRect();
+            const fl = document.createElement("div");
+            fl.className = `floating-point ${className}`;
+            fl.innerText = text;
+            fl.style.left = `${rect.left + window.scrollX + (rect.width/2) + (Math.random()*40 - 20)}px`;
+            fl.style.top = `${rect.top + window.scrollY - 10}px`;
+
+            document.body.appendChild(fl);
+            
+            // 动画播放完直接摧毁
+            setTimeout(() => {
+                fl.remove();
+            }, 1200);
+        }
+
+        // 破产保护机制
+        function triggerBankruptcy() {
+            alert("⚠️ 公司的债务已严重超出破产红线（赤字超过 ¥30,000）！星屑工作室宣布倒闭！");
+            
+            // 重置存档
+            gameState = {
+                companyName: "星屑网络工作室",
+                funds: 50000,
+                fans: 100,
+                rp: 10,
+                date: { year: 1, month: 1, week: 1 },
+                employees: [
+                    { id: "player", name: "创始人(您)", role: "designer", stats: { code: 15, art: 10, design: 20 }, salary: 0, level: 1, xp: 0 }
+                ],
+                unlockedGenres: ["Casual"],
+                unlockedTopics: ["Laborer"],
+                unlockedPlatforms: ["Mobile"],
+                releases: [],
+                currentProject: null,
+                lastIncome: 0,
+                activeTrend: { genre: "Casual", topic: "Laborer" }
+            };
+            saveGame();
+            window.location.reload();
+        }
+
+        // ==========================================================================
+        // 存档与读档 logic (localStorage)
+        // ==========================================================================
+        function saveGame() {
+            localStorage.setItem("hoshikuzu_tycoon_save", JSON.stringify(gameState));
+        }
+
+        function loadGame() {
+            const data = localStorage.getItem("hoshikuzu_tycoon_save");
+            if (data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    // 确保创始人字段等基础信息完备
+                    if (parsed.companyName) gameState = parsed;
+                } catch(e) {
+                    console.error("存档损坏，已初始化新公司进度", e);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
