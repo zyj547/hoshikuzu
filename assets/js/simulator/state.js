@@ -56,7 +56,7 @@ const SAVE_VERSION = 2;
 function createDefaultGameState() {
     return {
         companyName: "桔子网络工作室",
-        funds: 50000,
+        funds: 35000,
         fans: 100,
         rp: 10,
         date: { year: 1, month: 1, week: 1 },
@@ -367,9 +367,10 @@ const BALANCE = {
     stepMs: 900,              // 推进时每“周”的实际耗时（毫秒），仅在推进中流逝
     weeklyRent: 500,          // 每周固定租金
     salesWindowWeeks: 16,     // 单款游戏在售周数
-    revenueDecay: 0.75,       // 每周营收衰减系数
-    revenuePerRating: 1500,   // 单位口碑分基础营收
-    fansRevenueFactor: 0.002, // 粉丝对营收的加成系数
+    revenueDecay: 0.72,       // 每周营收衰减系数（更前置，符合独立游戏首周爆发后迅速回落）
+    revenuePerRating: 240,    // 单位口碑分基础营收（大幅下调，贴近国内独立游戏初期低收益）
+    fansRevenueFactor: 0.0008, // 粉丝对营收的加成系数（降低滚雪球速度）
+    fansRevenueCap: 10,       // 粉丝营收乘数上限（人气助力会饱和，避免后期营收爆炸）
     publisherShare: { tiktok: 0.5, steam: 0.7, self: 1.0 }, // 发行分成（保留比例）
     fansBoostPerWeek: 5,      // 大厂光环每周粉丝回流
     idleRpChance: 0.25,       // 闲置员工每周积累 RP 概率

@@ -114,7 +114,8 @@ function weeklyStep() {
     gameState.releases.forEach(game => {
         if (game.weeksSinceRelease < BALANCE.salesWindowWeeks) {
             const decay = Math.pow(BALANCE.revenueDecay, game.weeksSinceRelease);
-            const baseRevenue = game.rating * BALANCE.revenuePerRating * (1 + gameState.fans * BALANCE.fansRevenueFactor) * PLATFORMS_DATA[game.platform].scale;
+            const fansMul = Math.min(BALANCE.fansRevenueCap, 1 + gameState.fans * BALANCE.fansRevenueFactor);
+            const baseRevenue = game.rating * BALANCE.revenuePerRating * fansMul * PLATFORMS_DATA[game.platform].scale;
             let shareMultiplier = BALANCE.publisherShare[game.publisher] ?? 1.0;
             // 创始人「商业嗅觉」：分成谈判优势，保留更多营收（不超过 100%）
             if (typeof founderPublisherBonus === "function") shareMultiplier = Math.min(1, shareMultiplier + founderPublisherBonus());

@@ -89,7 +89,7 @@ function estimateProjectPlan() {
     const runwayWeeks = Math.max(0, Math.floor((gameState.funds - cost.totalCost) / Math.max(1, monthlyWages / 4 + BALANCE.weeklyRent)));
     const fatigueMul = marketFatiguePenalty(selectedGenre);
     const estimatedScore = Math.min(9.9, Math.max(3.0, (
-        (fit.totalPower / (platform.scale * 130)) * 5.8 * fit.fit
+        (fit.totalPower / (platform.scale * 175)) * 5.8 * fit.fit
         * (hasTopicMatch ? 1.12 : 0.96)
         * (1 + trendHits * 0.08)
         * fatigueMul
@@ -630,7 +630,7 @@ function releaseGame(publisherType) {
 
 function buildReleaseEvaluation(proj) {
     const totalPoints = proj.code + proj.art + proj.design;
-    const platformTarget = PLATFORMS_DATA[proj.platform].scale * 150;
+    const platformTarget = PLATFORMS_DATA[proj.platform].scale * 280;
     const topic = TOPICS_DATA[proj.topic];
     const hasTopicMatch = topic.bestGenres.includes(proj.genre);
     const trendGenreHit = gameState.activeTrend.genre === proj.genre;

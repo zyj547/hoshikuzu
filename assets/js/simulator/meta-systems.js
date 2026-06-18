@@ -534,7 +534,7 @@ function applyMedalShopPerksAndStart() {
 
     // 全局重置 gameState（基于默认结构，叠加勋章商店购买的继承特权）
     gameState = createDefaultGameState();
-    gameState.funds = shopSelectedPerks.fundsBoost ? 80000 : 50000;
+    gameState.funds = shopSelectedPerks.fundsBoost ? 60000 : 35000;
     gameState.unlockedGenres = shopSelectedPerks.roguelikeUnlocked ? ["Casual", "Roguelike"] : ["Casual"];
     gameState.activePerks = { ...shopSelectedPerks };
     gameState.researchPerks = { workflow: false, community: false, analytics: false };
