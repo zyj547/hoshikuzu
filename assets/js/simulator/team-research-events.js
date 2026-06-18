@@ -234,8 +234,8 @@ async function fireEmployee(idx) {
         alert("创始人不能开除。");
         return;
     }
-    if (gameState.currentProject) {
-        alert("当前项目研发中，暂时不能开除员工。请先完成或发布项目，避免项目数据异常。");
+    if (gameState.currentProject || (gameState.auxProjects && gameState.auxProjects.length > 0)) {
+        alert("有项目正在研发中（含并行辅助项目），暂时不能开除员工。请先完成或发布所有项目。");
         return;
     }
 

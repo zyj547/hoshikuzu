@@ -72,6 +72,7 @@ function createDefaultGameState() {
         unlockedPlatforms: ["Mobile"],
         releases: [],
         currentProject: null,
+        auxProjects: [], // 并行辅助项目（B 组后台自动推进）
         lastIncome: 0,
         lastSales: 0,
         recentGenres: [], // 最近发布的类型序列，用于市场疲劳度判定
@@ -207,6 +208,7 @@ function sanitizeProject(project) {
         cardsNeeded: clampInteger(project.cardsNeeded, 3, 20, 6),
         polishWeeksLeft: clampInteger(project.polishWeeksLeft, 0, 8, 0),
         rushPenalty: Boolean(project.rushPenalty),
+        isAux: Boolean(project.isAux),
         state: enumValue(project.state, VALID_PROJECT_STATES, "developing")
     };
 }
@@ -296,6 +298,11 @@ function sanitizeSave(rawSave) {
         .map(sanitizeRelease)
         .filter(Boolean);
     clean.currentProject = sanitizeProject(migrated.currentProject);
+    clean.auxProjects = (Array.isArray(migrated.auxProjects) ? migrated.auxProjects : [])
+        .slice(0, 2)
+        .map(sanitizeProject)
+        .filter(Boolean)
+        .map(p => { p.isAux = true; return p; });
     clean.founderBackground = enumValue(migrated.founderBackground, Object.keys(FOUNDER_BACKGROUNDS), null);
     clean.recentGenres = (Array.isArray(migrated.recentGenres) ? migrated.recentGenres : [])
         .filter(g => Object.keys(GENRES_DATA).includes(g)).slice(-5);

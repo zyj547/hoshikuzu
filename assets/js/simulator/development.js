@@ -168,6 +168,26 @@ function setupDevelopForm() {
     });
 
     renderProjectPreview();
+
+    // 并行辅助项目按钮：仅在公司阶段解锁并行产能时显示
+    const auxBtn = document.getElementById("btn-start-aux");
+    const auxHint = document.getElementById("aux-cap-hint");
+    const cap = typeof stageParallelCap === "function" ? stageParallelCap() : 0;
+    if (auxBtn && auxHint) {
+        const used = (gameState.auxProjects || []).length;
+        if (cap > 0) {
+            auxBtn.style.display = "";
+            auxHint.style.display = "";
+            const full = used >= cap;
+            auxBtn.disabled = full;
+            auxBtn.style.opacity = full ? "0.45" : "";
+            auxHint.innerText = `并行辅助项目槽位：${used}/${cap}（${currentStage().name} 阶段）`;
+        } else {
+            auxBtn.style.display = "none";
+            auxHint.style.display = "block";
+            auxHint.innerText = "晋级到「正规化企业」阶段后可解锁并行辅助项目。";
+        }
+    }
 }
 
 function startDevelopment() {
@@ -208,19 +228,8 @@ function startDevelopment() {
 // ==========================================================================
 // 研发期：员工自动产出研发点数（每周由 weeklyStep 调用，不增长进度）
 // ==========================================================================
-function accumulateDevPoints() {
-    const proj = gameState.currentProject;
-    if (!proj || (proj.state !== "developing" && proj.state !== "polishing")) return;
-
-    if (proj.state === "polishing") {
-        proj.polishWeeksLeft = Math.max(0, (proj.polishWeeksLeft || 0) - 1);
-        proj.code *= 1.075; proj.art *= 1.075; proj.design *= 1.075;
-        if (proj.polishWeeksLeft <= 0) {
-            proj.state = "finished";
-        }
-        return;
-    }
-
+// 向某个项目注入一周的研发点数（rate 为团队产能占比，辅助项目额外打折）
+function addProjectPoints(proj, rate) {
     gameState.employees.forEach(emp => {
         const eff = employeeEfficiency(emp);
         const isFounder = emp.id === "player";
@@ -239,19 +248,109 @@ function accumulateDevPoints() {
             codeGen = (emp.stats.code * 0.1) * eff;
             if (emp.specialty === "writer") desGen *= 1.40;
         }
-
-        // 创始人背景加成
         if (isFounder && gameState.founderBackground === "coder") codeGen *= 1.30;
         if (isFounder && gameState.founderBackground === "artist") artGen *= 1.30;
 
-        proj.code += codeGen;
-        proj.art += artGen;
-        proj.design += desGen;
+        proj.code += codeGen * rate;
+        proj.art += artGen * rate;
+        proj.design += desGen * rate;
+    });
+}
 
-        const fatigueGain = gameState.researchPerks && gameState.researchPerks.workflow ? 2 : 3;
+// 一周的团队疲劳/士气结算（与项目数量无关，只在有研发活动时调用一次）
+function applyWeeklyDevFatigue() {
+    const fatigueGain = gameState.researchPerks && gameState.researchPerks.workflow ? 2 : 3;
+    gameState.employees.forEach(emp => {
         emp.fatigue = Math.min(100, (emp.fatigue || 0) + fatigueGain);
         if (emp.fatigue > 70) emp.morale = Math.max(0, (emp.morale == null ? 75 : emp.morale) - 1);
     });
+}
+
+// 主项目（交互式卡片研发）的每周点数累积
+function accumulateDevPoints(rate = 1) {
+    const proj = gameState.currentProject;
+    if (!proj || (proj.state !== "developing" && proj.state !== "polishing")) return;
+
+    if (proj.state === "polishing") {
+        proj.polishWeeksLeft = Math.max(0, (proj.polishWeeksLeft || 0) - 1);
+        proj.code *= 1.075; proj.art *= 1.075; proj.design *= 1.075;
+        if (proj.polishWeeksLeft <= 0) proj.state = "finished";
+        return;
+    }
+    addProjectPoints(proj, rate);
+}
+
+// ==========================================================================
+// 并行辅助项目（B 组后台自动推进，无需逐卡决策）
+// ==========================================================================
+function startAuxProject() {
+    const cap = typeof stageParallelCap === "function" ? stageParallelCap() : 0;
+    if (!gameState.auxProjects) gameState.auxProjects = [];
+    if (gameState.auxProjects.length >= cap) {
+        alert(`当前阶段最多并行 ${cap} 个辅助项目，已达上限。`);
+        return;
+    }
+    const nameInput = document.getElementById("dev-name").value.trim();
+    const gameName = nameInput || `并行企划 ${Math.floor(Math.random() * 100)}`;
+    const { totalCost } = calculateProjectCost();
+    if (gameState.funds < totalCost) { alert("资金不足以启动该辅助项目！"); return; }
+    gameState.funds -= totalCost;
+
+    const scale = PLATFORMS_DATA[selectedPlatform].scale;
+    gameState.auxProjects.push({
+        name: gameName, platform: selectedPlatform, genre: selectedGenre, topic: selectedTopic,
+        progress: 0, code: 0, art: 0, design: 0, bugs: 0,
+        cardsResolved: 0, cardsNeeded: Math.max(5, Math.round(4 + scale * 1.6)),
+        polishWeeksLeft: 0, rushPenalty: false, isAux: true, state: "developing"
+    });
+    addChronicleEntry(`🧩 B 组启动并行辅助项目《${gameName}》，将在后台自动推进研发。`);
+    saveGame();
+    updateStatsUI();
+    alert(`辅助项目《${gameName}》已立项！它会在你推进时间时由 B 组自动开发，完成后自动以「自主发行」上线。`);
+}
+
+// 每周推进所有辅助项目（rate 为分配到的团队产能）
+function tickAuxProjects(rate) {
+    const list = gameState.auxProjects || [];
+    if (list.length === 0) return;
+    const finished = [];
+
+    list.forEach(aux => {
+        if (aux.state !== "developing") return;
+        // B 组效率折扣
+        addProjectPoints(aux, rate * 0.8);
+        // 进度自动推进（按团队规模与阶段效率）
+        const teamPower = gameState.employees.reduce((s, e) => s + e.stats.code + e.stats.art + e.stats.design, 0);
+        aux.progress = Math.min(100, aux.progress + (6 + teamPower * 0.025) * rate);
+        // 偶发后台 Bug
+        if (Math.random() < 0.12) aux.bugs += 1;
+        if (aux.progress >= 100) { aux.progress = 100; aux.state = "finished"; finished.push(aux); }
+    });
+
+    // 完成的辅助项目自动以自主发行上线
+    finished.forEach(aux => autoReleaseAux(aux));
+    if (finished.length > 0) {
+        gameState.auxProjects = gameState.auxProjects.filter(a => a.state !== "finished");
+    }
+}
+
+function autoReleaseAux(aux) {
+    const evaluation = buildReleaseEvaluation(aux);
+    const finalScore = evaluation.finalScore;
+    let writerBonus = 1.0;
+    gameState.employees.forEach(emp => { if (emp.specialty === "writer") writerBonus += 0.20; });
+    if (gameState.founderBackground === "influencer") writerBonus += 0.20;
+
+    const release = {
+        name: aux.name, platform: aux.platform, genre: aux.genre, topic: aux.topic,
+        rating: finalScore, weeksSinceRelease: 0, revenueGenerated: 0, publisher: "self",
+        fansGained: Math.round(finalScore * finalScore * 25 * evaluation.bonus * writerBonus)
+    };
+    gameState.releases.unshift(release);
+    gameState.fans += release.fansGained;
+    gameState.recentGenres = (gameState.recentGenres || []).concat(aux.genre).slice(-5);
+    addChronicleEntry(`🧩 并行辅助项目《${aux.name}》后台开发完成，自动自主发行上线！评分 ${finalScore}，新增 ${release.fansGained.toLocaleString()} 粉丝。`);
+    if (typeof playSFX === "function") playSFX("success");
 }
 
 // ==========================================================================

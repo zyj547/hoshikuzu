@@ -142,7 +142,13 @@ function weeklyStep() {
         gameState.fans += 8;
     }
 
-    if (!gameState.currentProject) {
+    // 统计本周处于研发态的项目数（主项目开发/打磨 + 各辅助项目），决定团队产能分配
+    const mainDeveloping = gameState.currentProject &&
+        (gameState.currentProject.state === "developing" || gameState.currentProject.state === "polishing");
+    const auxCount = (gameState.auxProjects || []).filter(a => a.state === "developing").length;
+    const activeDevCount = (mainDeveloping ? 1 : 0) + auxCount;
+
+    if (activeDevCount === 0) {
         // 空窗期：员工恢复 + 闲置积累 RP
         gameState.employees.forEach(emp => {
             emp.fatigue = Math.max(0, (emp.fatigue || 0) - 8);
@@ -156,8 +162,11 @@ function weeklyStep() {
             }
         });
     } else {
-        // 研发期：员工自动产出研发点数（进度仅由卡片推进，不在此处增长）
-        accumulateDevPoints();
+        // 研发期：团队产能在所有在研项目间分摊（并行的代价 = 各自更慢）
+        const rate = 1 / activeDevCount;
+        applyWeeklyDevFatigue();
+        accumulateDevPoints(rate);
+        tickAuxProjects(rate);
     }
 
     // 趋势刷新

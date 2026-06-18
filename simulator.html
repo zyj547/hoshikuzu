@@ -219,6 +219,11 @@
                                 </div>
                             </div>
                             
+                            <div class="glass-box" id="aux-projects-box" style="display:none;">
+                                <h3 class="aside-title" style="color: var(--accent-yellow);"><i class="fa-solid fa-layer-group"></i>并行项目（B组）</h3>
+                                <div id="aux-projects-list"></div>
+                            </div>
+
                             <div class="glass-box">
                                 <h3 class="aside-title" style="color: var(--accent-pink);"><i class="fa-solid fa-bullhorn"></i>热门趋势</h3>
                                 <div class="stat-list">
@@ -286,6 +291,12 @@
                         <button class="btn-start-dev" onclick="startDevelopment()">
                             <i class="fa-solid fa-rocket" style="margin-right: 8px;"></i>扣除研发金并开始制作
                         </button>
+
+                        <!-- 并行辅助项目按钮（达到企业阶段后解锁） -->
+                        <button class="btn-start-dev btn-aux-dev" id="btn-start-aux" style="display:none;" onclick="startAuxProject()">
+                            <i class="fa-solid fa-layer-group" style="margin-right: 8px;"></i>作为并行辅助项目研发（B组自动推进）
+                        </button>
+                        <p class="aux-cap-hint" id="aux-cap-hint" style="display:none;"></p>
                     </div>
                 </div>
 

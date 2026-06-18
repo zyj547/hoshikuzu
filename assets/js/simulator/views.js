@@ -377,6 +377,28 @@ function updateStatsUI() {
 
     // 公司发展阶段简报
     if (typeof renderStageBrief === "function") renderStageBrief();
+
+    // 并行辅助项目面板
+    renderAuxProjects();
+}
+
+function renderAuxProjects() {
+    const box = document.getElementById("aux-projects-box");
+    const list = document.getElementById("aux-projects-list");
+    if (!box || !list) return;
+    const aux = gameState.auxProjects || [];
+    if (aux.length === 0) { box.style.display = "none"; return; }
+    box.style.display = "";
+    list.innerHTML = aux.map(p => `
+        <div class="aux-proj-item">
+            <div class="aux-proj-head">
+                <span class="aux-proj-name">${escapeHtml(p.name)}</span>
+                <span class="aux-proj-pct">${Math.floor(p.progress)}%</span>
+            </div>
+            <div class="aux-proj-meta">${GENRES_DATA[p.genre].name} · ${PLATFORMS_DATA[p.platform].name}</div>
+            <div class="aux-proj-track"><div class="aux-proj-bar" style="width:${p.progress}%;"></div></div>
+        </div>
+    `).join("");
 }
 
 // 更新大趋势

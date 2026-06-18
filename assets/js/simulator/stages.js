@@ -31,6 +31,13 @@ function stageMoraleBonus() {
     return currentStage().moraleBonus;
 }
 
+// 当前阶段可同时运行的「并行辅助项目」数量上限（主项目之外）
+// 独立作坊/新生工作室：0；正规化企业：1；行业巨头：2
+function stageParallelCap() {
+    const caps = [0, 0, 1, 2];
+    return caps[currentStageIndex()] || 0;
+}
+
 // 计算晋级到下一阶段的逐条资格（手动晋级用）
 function getStageUpEligibility() {
     const next = nextStage();
