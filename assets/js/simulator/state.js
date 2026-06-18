@@ -69,7 +69,7 @@ function createDefaultGameState() {
         creativeArmed: false, // 创意激发已激活、待下次发行消耗
         nextTrend: null,      // 商业嗅觉：预知的下季趋势
         employees: [
-            { id: "player", name: "创始人(您)", role: "designer", stats: { code: 15, art: 10, design: 20 }, salary: 0, level: 1, xp: 0, trait: "multi", morale: 78, fatigue: 0, contractWeeksLeft: null, contractYears: 0, pendingRenewal: false }
+            { id: "player", name: "创始人(您)", role: "designer", stats: { code: 15, art: 10, design: 20 }, salary: 0, level: 1, xp: 0, trait: "multi", morale: 78, fatigue: 0, contractWeeksLeft: null, contractYears: 0, archetype: "pragmatic", weeksThisCycle: 0, pendingRenewal: false }
         ],
         officeSlots: 3,
         companyStage: 0, // 公司发展阶段索引（0=独立作坊）
@@ -188,6 +188,8 @@ function sanitizeEmployee(emp, fallback) {
         xp: clampInteger(source.xp, 0, 999999, fallback.xp || 0),
         trait: enumValue(source.trait, Object.keys(EMPLOYEE_TRAITS), fallback.trait || "none"),
         rarity: enumValue(source.rarity, ["R", "SR", "SSR"], fallback.rarity || "R"),
+        archetype: enumValue(source.archetype, Object.keys(EMPLOYEE_ARCHETYPES), fallback.archetype || "pragmatic"),
+        weeksThisCycle: clampInteger(source.weeksThisCycle, 0, 4, 0),
         morale: clampInteger(source.morale, 0, 100, fallback.morale == null ? 75 : fallback.morale),
         fatigue: clampInteger(source.fatigue, 0, 100, fallback.fatigue || 0),
         contractWeeksLeft: source.contractWeeksLeft == null ? null : clampInteger(source.contractWeeksLeft, 0, 400, 96),

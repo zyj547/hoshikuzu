@@ -2601,3 +2601,9 @@
         .talent-active-btn.ready { animation: stageup-btn-pulse 1.3s infinite; }
         .talent-active-btn.armed { border-color: var(--accent-yellow); color: var(--accent-yellow); }
         .talent-active-btn:disabled { cursor: default; }
+
+/* 性格标签 */
+.trait-badge.archetype { background: rgba(124, 92, 255, 0.18); color: #b9a8ff; border: 1px solid rgba(124,92,255,0.4); }
+/* 谈薪报价行 */
+#interview-choices .haggle-row { display:flex; gap:0.5rem; align-items:center; justify-content:space-between; width:100%; }
+#interview-choices .haggle-note { font-size:0.8rem; opacity:0.8; margin:0.2rem 0 0.4rem; }

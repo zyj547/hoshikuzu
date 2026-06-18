@@ -34,6 +34,150 @@
             "lazy": { name: "摸鱼达人", desc: "培训成本减半，但属性增长极随机", badgeClass: "lazy" }
         };
 
+        // ==========================================================================
+        // 性格原型：驱动面试剧情与谈薪脾气，独立于能力 trait
+        // ==========================================================================
+        const EMPLOYEE_ARCHETYPES = {
+            fresh: {
+                name: "应届热血", desc: "没经验但有冲劲，问东问西。",
+                expectMult: 0.85, floorRatio: 0.82, concession: 0.55, walkChance: 0.12, noShowChance: 0, moraleSeed: 85,
+                lines: {
+                    intro: ["「学长好！我看了你们的游戏，超喜欢的，我一定能行！」", "「虽然我没正式上过班，但我做过三个 game jam！」"],
+                    scenarios: [
+                        { q: "项目要赶发行，需要连续加几周班，你怎么看？", choices: [
+                            { text: "没问题！正想多学点东西", impression: 2, expectAdj: -200, moraleAdj: 5 },
+                            { text: "可以，但希望之后能调休", impression: 1, expectAdj: 0, moraleAdj: 0 },
+                            { text: "我不太能接受长期加班", impression: -1, expectAdj: 300, moraleAdj: -3 }
+                        ]},
+                        { q: "如果你的方案被全盘否定，你会？", choices: [
+                            { text: "虚心请教问题在哪，立刻改", impression: 2, expectAdj: -150, moraleAdj: 4 },
+                            { text: "据理力争，先讲完我的思路", impression: 0, expectAdj: 0, moraleAdj: 0 }
+                        ]}
+                    ],
+                    haggleFirst: ["「这个数……我其实没什么概念，您觉得合适就行！」"],
+                    haggleCounter: ["「能再稍微高一点点吗？我想证明自己值这个价。」"],
+                    haggleAccept: ["「成交！我明天就能来！谢谢老板！」"],
+                    haggleReject: ["「啊……那可能我还没准备好，谢谢您给的机会。」"],
+                    onboard: ["新人带着一摞笔记本入职了，眼里全是光。"]
+                }
+            },
+            veteran: {
+                name: "大厂老油条", desc: "简历光鲜、爱端着、反过来考你。",
+                expectMult: 1.35, floorRatio: 0.88, concession: 0.25, walkChance: 0.30, noShowChance: 0, moraleSeed: 70,
+                lines: {
+                    intro: ["「我在 X 厂带过 20 人的项目，小工作室……也行吧。」", "「先说好，我不做没意义的 996。」"],
+                    scenarios: [
+                        { q: "你怎么看我们这种小团队的前景？", choices: [
+                            { text: "坦诚讲清楚现状和规划", impression: 2, expectAdj: -400, moraleAdj: 3 },
+                            { text: "画个大饼稳住他", impression: -2, expectAdj: 500, moraleAdj: -5 },
+                            { text: "反问他能带来什么", impression: 1, expectAdj: 0, moraleAdj: 0 }
+                        ]},
+                        { q: "他要求一个明显超出预算的工具授权，你？", choices: [
+                            { text: "解释预算，提供替代方案", impression: 1, expectAdj: -200, moraleAdj: 0 },
+                            { text: "直接答应避免谈崩", impression: -1, expectAdj: 0, moraleAdj: -2 }
+                        ]}
+                    ],
+                    haggleFirst: ["「我的市场价你应该清楚，少了这个数没法谈。」"],
+                    haggleCounter: ["「行吧，我让一步，但不能再低了。」"],
+                    haggleAccept: ["「成交。希望别让我失望。」"],
+                    haggleReject: ["「那没什么好聊的了，告辞。」"],
+                    onboard: ["老兵叼着咖啡入职，先把工位 setup 折腾了一上午。"]
+                }
+            },
+            idealist: {
+                name: "为爱发电理想党", desc: "只问项目愿景与题材，不太在乎钱。",
+                expectMult: 0.80, floorRatio: 0.85, concession: 0.45, walkChance: 0.20, noShowChance: 0, moraleSeed: 88,
+                lines: {
+                    intro: ["「我不太在意工资，我只想做真正打动人的游戏。」", "「你们下一款，到底想跟玩家说什么？」"],
+                    scenarios: [
+                        { q: "他问公司最看重商业还是表达，你？", choices: [
+                            { text: "诚实地说我们想两者兼顾", impression: 2, expectAdj: -100, moraleAdj: 5 },
+                            { text: "迎合他全讲情怀", impression: 0, expectAdj: -300, moraleAdj: 2 },
+                            { text: "强调先活下去再谈理想", impression: -2, expectAdj: 200, moraleAdj: -6 }
+                        ]},
+                        { q: "项目方向可能临时转向纯商业向，他能接受吗？", choices: [
+                            { text: "承诺保留一块创作自留地", impression: 2, expectAdj: -150, moraleAdj: 4 },
+                            { text: "含糊带过", impression: -1, expectAdj: 100, moraleAdj: -3 }
+                        ]}
+                    ],
+                    haggleFirst: ["「钱够生活就行，但项目方向我得认同。」"],
+                    haggleCounter: ["「再低我也不是不行，只要我们做的是对的东西。」"],
+                    haggleAccept: ["「好，我加入。让我们做点了不起的吧。」"],
+                    haggleReject: ["「抱歉，这不是我想要的地方。」"],
+                    onboard: ["理想党入职第一天就贴了一墙概念图。"]
+                }
+            },
+            pragmatic: {
+                name: "务实养家型", desc: "稳重，关心稳定性和发薪是否准时。",
+                expectMult: 1.0, floorRatio: 0.80, concession: 0.60, walkChance: 0.18, noShowChance: 0, moraleSeed: 75,
+                lines: {
+                    intro: ["「我家里两个娃，最看重稳定和按时发工资。」", "「活我能干，就想问公司账上稳不稳。」"],
+                    scenarios: [
+                        { q: "他直接问会不会拖欠工资，你？", choices: [
+                            { text: "如实说明现金流并承诺准时", impression: 2, expectAdj: -300, moraleAdj: 4 },
+                            { text: "拍胸脯保证绝不可能", impression: 0, expectAdj: 0, moraleAdj: 0 },
+                            { text: "含糊其辞", impression: -2, expectAdj: 200, moraleAdj: -5 }
+                        ]},
+                        { q: "需要他偶尔兼顾不擅长的杂活，他？", choices: [
+                            { text: "讲清楚边界与回报", impression: 1, expectAdj: -150, moraleAdj: 2 },
+                            { text: "默认他全包", impression: -1, expectAdj: 0, moraleAdj: -2 }
+                        ]}
+                    ],
+                    haggleFirst: ["「这个价我能接受，但请务必按时发。」"],
+                    haggleCounter: ["「再压一点也行，稳定比多几百块重要。」"],
+                    haggleAccept: ["「那就这么定了，我会踏实干。」"],
+                    haggleReject: ["「这价格养不了家，抱歉了。」"],
+                    onboard: ["务实型默默搬来一个保温杯，开始稳稳地干活。"]
+                }
+            },
+            slash: {
+                name: "斜杠不稳定型", desc: "身兼数职、跳脱，可能放鸽子。",
+                expectMult: 1.10, floorRatio: 0.83, concession: 0.40, walkChance: 0.28, noShowChance: 0.18, moraleSeed: 68,
+                lines: {
+                    intro: ["「我平时还接私活、做播客、玩乐队，时间得灵活点。」", "「哦对，我下午还有个拍摄，咱快点？」"],
+                    scenarios: [
+                        { q: "你能接受他保留一部分外部项目吗？", choices: [
+                            { text: "可以，约定好不影响主线", impression: 2, expectAdj: -200, moraleAdj: 4 },
+                            { text: "要求全职专注", impression: -2, expectAdj: 300, moraleAdj: -4 },
+                            { text: "睁一只眼闭一只眼", impression: 0, expectAdj: 0, moraleAdj: -1 }
+                        ]},
+                        { q: "他临时改了面试时间还迟到，你？", choices: [
+                            { text: "理解但明确底线", impression: 1, expectAdj: -100, moraleAdj: 0 },
+                            { text: "表示无所谓", impression: -1, expectAdj: 100, moraleAdj: -2 }
+                        ]}
+                    ],
+                    haggleFirst: ["「数字嘛……看心情，给个让我有动力的价？」"],
+                    haggleCounter: ["「再加点我就不接那个外活了，怎么样？」"],
+                    haggleAccept: ["「成交成交，我先闪了啊！」"],
+                    haggleReject: ["「算了算了，缘分没到，拜拜～」"],
+                    onboard: ["斜杠青年入职，工位上很快堆满了不相干的设备。"]
+                }
+            },
+            lazy: {
+                name: "躺平摆烂型", desc: "兴趣缺缺、面试敷衍。",
+                expectMult: 0.78, floorRatio: 0.90, concession: 0.50, walkChance: 0.10, noShowChance: 0, moraleSeed: 55,
+                lines: {
+                    intro: ["「面试问这么多干嘛……能干活就行了吧。」", "「钱不用太多，别太累就好。」"],
+                    scenarios: [
+                        { q: "问他职业规划，他？", choices: [
+                            { text: "你引导他找到一点兴趣点", impression: 2, expectAdj: -100, moraleAdj: 8 },
+                            { text: "随便聊聊就过", impression: 0, expectAdj: 0, moraleAdj: 0 },
+                            { text: "当场点破他在摸鱼", impression: -2, expectAdj: 200, moraleAdj: -6 }
+                        ]},
+                        { q: "他问能不能不加班，你？", choices: [
+                            { text: "承诺合理工时换稳定产出", impression: 1, expectAdj: -50, moraleAdj: 6 },
+                            { text: "强调本公司常加班", impression: -1, expectAdj: 150, moraleAdj: -8 }
+                        ]}
+                    ],
+                    haggleFirst: ["「随便给点就行，别指望我拼命。」"],
+                    haggleCounter: ["「嗯……再少点我也无所谓，反正都那样。」"],
+                    haggleAccept: ["「行吧，那我来上班咯。」"],
+                    haggleReject: ["「太麻烦了，不来了。」"],
+                    onboard: ["摆烂型入职，第一件事是研究椅子能不能躺平。"]
+                }
+            }
+        };
+
         const RANDOM_NAMES = ["张三", "李四", "王五", "小智", "阿伟", "老陈", "阿强", "小美", "大壮", "阿龙", "小华", "杰森"];
 
         // ==========================================================================

@@ -476,6 +476,15 @@
         </div>
     </div>
 
+    <!-- 面试 / 谈薪 模态框 -->
+    <div class="modal-overlay" id="interview-modal">
+        <div class="event-card">
+            <h3 class="event-title" id="interview-title"><i class="fa-solid fa-user-tie"></i> 面试</h3>
+            <p class="event-desc" id="interview-desc">候选人台词</p>
+            <div class="event-choices" id="interview-choices"></div>
+        </div>
+    </div>
+
     <!-- 4.4 发行商决策模态框 -->
     <div class="modal-overlay" id="publisher-modal">
         <div class="review-card" style="max-width: 750px;">
@@ -772,6 +781,7 @@
        5. 游戏Tycoon引擎逻辑 (Simulator Engine Script)
        ========================================================================== -->
     <script src="assets/js/data.js?v=6"></script>
+    <script src="assets/js/data-events.js?v=6"></script>
     <script src="assets/js/simulator/ui-modals.js?v=6"></script>
     <script src="assets/js/simulator/state.js?v=6"></script>
     <script src="assets/js/simulator/stages.js?v=6"></script>
@@ -781,9 +791,12 @@
     <script src="assets/js/simulator/storage.js?v=6"></script>
     <script src="assets/js/simulator/audio.js"></script>
     <script src="assets/js/simulator/boot.js?v=6"></script>
+    <script src="assets/js/simulator/interview-calc.js?v=6"></script>
+    <script src="assets/js/simulator/event-engine.js?v=6"></script>
     <script src="assets/js/simulator/game-loop.js?v=6"></script>
     <script src="assets/js/simulator/development.js?v=6"></script>
     <script src="assets/js/simulator/team-research-events.js?v=6"></script>
+    <script src="assets/js/simulator/interview.js?v=6"></script>
     <script src="assets/js/simulator/views.js?v=6"></script>
     <script src="assets/js/simulator/meta-systems.js?v=6"></script>
 </body>

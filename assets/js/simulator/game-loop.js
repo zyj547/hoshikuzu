@@ -102,11 +102,16 @@ function weeklyStep() {
     // 每周固定租金
     gameState.funds -= BALANCE.weeklyRent;
 
-    // 月薪制：仅在发薪日统一扣除全员月薪
+    // 在岗周累加（创始人 salary=0 不影响）
+    gameState.employees.forEach(emp => { emp.weeksThisCycle = (emp.weeksThisCycle || 0) + 1; });
+
+    // 按周计薪：仅发薪日统一结算，按本周期实际在岗周数比例发放
     let wagesPaid = 0;
     if (isPayday) {
-        wagesPaid = gameState.employees.reduce((sum, emp) => sum + emp.salary, 0);
+        wagesPaid = gameState.employees.reduce((sum, emp) => sum + proratedWage(emp.salary, emp.weeksThisCycle), 0);
         gameState.funds -= wagesPaid;
+        gameState.lastWagesPaid = wagesPaid;
+        gameState.employees.forEach(emp => { emp.weeksThisCycle = 0; });
     }
 
     // 在售游戏的持续营收（含市场疲劳已写入 rating，不再重复）
@@ -218,12 +223,13 @@ function trendUpdateChance() {
 
 // 发薪日财务简报
 function showPaydayBrief() {
-    const wages = gameState.employees.reduce((sum, emp) => sum + emp.salary, 0);
+    const wages = gameState.lastWagesPaid || 0;
     const fundsTone = gameState.funds < 0 ? "var(--accent-pink)" : "var(--accent-neon)";
     const msg = `
         <div style="text-align:left; display:flex; flex-direction:column; gap:0.5rem;">
             <div style="font-weight:700; color:#fff;">📅 第 ${gameState.date.year} 年 ${gameState.date.month} 月 · 发薪日结算</div>
             <div style="display:flex; justify-content:space-between;"><span>本月员工月薪</span><span style="color:var(--accent-pink);">-¥${wages.toLocaleString()}</span></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.82rem; opacity:0.8;"><span>计薪口径</span><span>按本月实际在岗周数比例发放</span></div>
             <div style="display:flex; justify-content:space-between;"><span>当前资金余额</span><span style="color:${fundsTone};">¥${Math.round(gameState.funds).toLocaleString()}</span></div>
         </div>`;
     alert(msg, "财务简报");

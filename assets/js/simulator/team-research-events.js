@@ -53,15 +53,24 @@ function generateCandidate(role, rarityKey) {
         salary = salary * 2;
     }
 
+    // 性格原型（独立于 trait）
+    const archKeys = Object.keys(EMPLOYEE_ARCHETYPES);
+    const archetype = archKeys[Math.floor(Math.random() * archKeys.length)];
+    const arch = EMPLOYEE_ARCHETYPES[archetype];
+    const { expectedSalary, salaryFloor } = archetypeExpect(salary, arch);
+
     return {
         name: rName,
         role,
         stats: { code, art, design },
         salary,
+        expectedSalary,
+        salaryFloor,
         cost,
         level: rarity.level,
         trait: randomTrait,
-        rarity: rarityKey
+        rarity: rarityKey,
+        archetype
     };
 }
 
@@ -94,6 +103,8 @@ function loadStaffRecruits() {
 
         const traitObj = EMPLOYEE_TRAITS[cand.trait || "none"];
         const traitHTML = cand.trait && cand.trait !== "none" ? `<span class="trait-badge ${traitObj.badgeClass}" title="${traitObj.desc}">${traitObj.name}</span>` : "";
+        const arch = EMPLOYEE_ARCHETYPES[cand.archetype || "pragmatic"];
+        const archHTML = `<span class="trait-badge archetype" title="${arch.desc}">${arch.name}</span>`;
         const rarity = HIRING_RARITIES[cand.rarity || "R"];
         const totalStats = cand.stats.code + cand.stats.art + cand.stats.design;
         const salaryEfficiency = Math.round(totalStats / Math.max(1, cand.salary / 1000));
@@ -105,7 +116,7 @@ function loadStaffRecruits() {
                         <i class="fa-solid ${iconClass}"></i>
                     </div>
                     <div class="staff-profile">
-                        <span class="staff-name">${cand.name} ${traitHTML}</span>
+                        <span class="staff-name">${cand.name} ${archHTML} ${traitHTML}</span>
                         <span class="staff-level" style="color: ${roleColor}">${roleName}</span>
                     </div>
                 </div>
@@ -130,14 +141,14 @@ function loadStaffRecruits() {
             </div>
             <div class="candidate-salary-box">
                 <span class="list-lbl">期望月薪</span>
-                <span class="candidate-salary">¥${cand.salary}</span>
+                <span class="candidate-salary">¥${cand.expectedSalary}</span>
             </div>
             <div class="candidate-salary-box">
                 <span class="list-lbl">性价比指数</span>
                 <span class="candidate-salary" style="color: var(--accent-neon);">${salaryEfficiency}</span>
             </div>
-            <button class="btn-hire" onclick="hireCandidate(${idx})">
-                签订雇佣合同 (手续费 ¥${effectiveHireCost(cand)})
+            <button class="btn-hire" onclick="startInterview(${idx})">
+                邀约面试 (渠道费 ¥${getInterviewFee(cand, gameState.date.year).toLocaleString()})
             </button>
         ` };
     });
@@ -161,54 +172,46 @@ function refreshHiringMarket() {
     playSFX(forceSSR ? "success" : "click");
 }
 
-function hireCandidate(idx) {
-    const cand = hiringPool[idx];
+// 面试谈成后的录用写入（不再收大额入职手续费）
+function commitHire(cand, idx, finalSalary, initialMorale) {
     const officeSlots = gameState.officeSlots || 5;
-    if (gameState.employees.length >= officeSlots) {
-        alert(`当前办公室卡座已满！请先扩建工位（当前 ${officeSlots} 个）。`);
-        return;
-    }
-    if (gameState.funds < effectiveHireCost(cand)) {
-        alert("资金不足以支付入职雇佣手续费！");
-        return;
-    }
+    if (gameState.employees.length >= officeSlots) { alert("办公室卡座已满！"); return; }
 
-    gameState.funds -= effectiveHireCost(cand);
-    const contractYears = 1 + Math.floor(Math.random() * 3); // 1~3 年合同
+    const contractYears = 1 + Math.floor(Math.random() * 3);
     gameState.employees.push({
         name: cand.name,
         role: cand.role,
         stats: cand.stats,
-        salary: cand.salary,
+        salary: finalSalary,
         level: cand.level || 1,
         xp: 0,
         trait: cand.trait || "none",
         rarity: cand.rarity || "R",
-        morale: 75,
+        archetype: cand.archetype || "pragmatic",
+        morale: initialMorale,
         fatigue: 0,
+        weeksThisCycle: 0,
         contractYears: contractYears,
-        contractWeeksLeft: contractYears * 48, // 每年 48 周（12 月 × 4 周）
+        contractWeeksLeft: contractYears * 48,
         pendingRenewal: false
     });
 
-    // 移除招募池中的该候选人，并补一个新候选人保持市场可逛
     hiringPool.splice(idx, 1);
     while (hiringPool.length < 4) {
         const roles = ["designer", "programmer", "artist"];
-        hiringPool.push(generateCandidate(roles[Math.floor(Math.random() * roles.length)], rollHiringRarity()));
+        hiringPool.push(generateCandidate(roles[Math.floor(Math.random() * 3)], rollHiringRarity()));
     }
     updateHiringMarketUI();
     saveGame();
-    
+
     let roleName = "程序员";
     if (cand.role === "artist") roleName = "美术师";
     if (cand.role === "designer") roleName = "策划师";
-    addChronicleEntry(`🤝 成功招募 ${cand.rarity || "R"} 级候选人【${cand.name}】担任【${roleName}】！`);
+    addChronicleEntry(`🤝 经过面试与谈薪，${cand.rarity || "R"} 级【${cand.name}】以月薪 ¥${finalSalary.toLocaleString()} 入职【${roleName}】。`);
 
     updateStatsUI();
     loadStaffRecruits();
     playSFX("click");
-    alert(`恭喜！${cand.name} 已成功入职！`);
 }
 
 function getOfficeExpandCost() {
@@ -264,6 +267,11 @@ async function fireEmployee(idx) {
     }
 
     gameState.funds -= severance;
+    const accrued = proratedWage(emp.salary, emp.weeksThisCycle || 0);
+    if (accrued > 0) {
+        gameState.funds -= accrued;
+        addChronicleEntry(`💴 结算 ${emp.name} 本月在岗 ${emp.weeksThisCycle} 周工资 ¥${accrued.toLocaleString()}。`);
+    }
     gameState.employees.splice(idx, 1);
     addChronicleEntry(`📄 ${emp.name} 离开了工作室，支付离职补偿金 ¥${severance.toLocaleString()}。`);
     saveGame();
@@ -465,49 +473,31 @@ function researchTech(key) {
 // ==========================================================================
 // 突发事件引擎
 // ==========================================================================
-const EVENTS_POOL = [
-    {
-        title: "粉丝的疯狂来信",
-        desc: "有一位您的核心粉丝给工作室寄来一封信，表达了他对你们消除类游戏的热爱，并附赠了一张 ¥2,000 的赞助卡。但也有一群玩家抱怨你们没有出新题材，你打算怎么回应？",
-        choices: [
-            { text: "收下资金，给玩家发送一封感谢信", action: () => { gameState.funds += 2000; updateStatsUI(); alert("资金增加 ¥2,000"); } },
-            { text: "用 ¥3,000 举办线上粉丝见面会，回馈社区", action: () => { if (gameState.funds < 3000) return alert("资金不足！"); gameState.funds -= 3000; gameState.fans += 500; updateStatsUI(); alert("粉丝增加 500 人"); } }
-        ]
-    },
-    {
-        title: "发行商独占诱惑",
-        desc: "抖音知名发行大厂找到你们，承诺如果你们下一款游戏选择由他们代理发行，将立即一次性打款 ¥20,000 支持，但是这会抽走下款游戏 40% 的总分成。",
-        choices: [
-            { text: "同意代理协议，先拿钱再说！", action: () => { gameState.funds += 20000; updateStatsUI(); alert("启动资金增加 ¥20,000"); } },
-            { text: "拒绝大厂代理，坚持自主运营独立自强", action: () => { gameState.fans += 200; updateStatsUI(); alert("独立精神感动了社区，粉丝增长 200 人"); } }
-        ]
-    },
-    {
-        title: "核心代码大崩溃",
-        desc: "深夜开发时，一处服务器接口突然崩盘。程序员表示如果花 ¥4,000 购买云备份组件可以瞬间修复；否则必须全员加班，全工作室点数暂时下跌。",
-        choices: [
-            { text: "紧急出钱购买云备份组件修复", action: () => { if (gameState.funds < 4000) return alert("资金不足！"); gameState.funds -= 4000; updateStatsUI(); alert("危机解除"); } },
-            { text: "拒绝花冤枉钱，全体留下来加班维护", action: () => { gameState.employees.forEach(e => { e.stats.code = Math.max(1, e.stats.code - 2); }); alert("程序员过度劳累，代码开发能力下降"); } }
-        ]
-    }
-];
-
 function triggerRandomEvent() {
-    const ev = EVENTS_POOL[Math.floor(Math.random() * EVENTS_POOL.length)];
-    
+    const state = buildEventState(gameState);
+    const pool = eligibleEvents(STUDIO_EVENTS, state);
+    if (!pool.length) return; // 没有符合当前处境的事件就不打扰
+
+    const event = pickWeighted(pool, Math.random);
+    const targets = selectTargets(event, state, Math.random);
+    const ctx = { state, gameState, byRole: targets.byRole, target: targets.target };
+
     document.getElementById("event-modal").classList.add("active");
-    document.getElementById("event-modal-title").innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${ev.title}`;
-    document.getElementById("event-modal-desc").innerText = ev.desc;
-    
+    document.getElementById("event-modal-title").innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${resolveTokens(event.title, ctx)}`;
+    document.getElementById("event-modal-desc").innerText = resolveTokens(event.desc, ctx);
+
     const btnContainer = document.getElementById("event-modal-choices");
     btnContainer.innerHTML = "";
-    ev.choices.forEach(ch => {
+    event.choices.forEach(ch => {
         const btn = document.createElement("button");
         btn.className = "choice-btn";
-        btn.innerText = ch.text;
+        btn.innerText = resolveTokens(ch.text, ctx);
         btn.onclick = () => {
-            ch.action();
+            applyEffects(ch.effects, ctx, Math.random);
             document.getElementById("event-modal").classList.remove("active");
+            if (ch.feedback) alert(resolveTokens(ch.feedback, ctx));
+            updateStatsUI();
+            saveGame();
         };
         btnContainer.appendChild(btn);
     });
