@@ -115,7 +115,9 @@ function weeklyStep() {
         if (game.weeksSinceRelease < BALANCE.salesWindowWeeks) {
             const decay = Math.pow(BALANCE.revenueDecay, game.weeksSinceRelease);
             const baseRevenue = game.rating * BALANCE.revenuePerRating * (1 + gameState.fans * BALANCE.fansRevenueFactor) * PLATFORMS_DATA[game.platform].scale;
-            const shareMultiplier = BALANCE.publisherShare[game.publisher] ?? 1.0;
+            let shareMultiplier = BALANCE.publisherShare[game.publisher] ?? 1.0;
+            // 创始人「商业嗅觉」：分成谈判优势，保留更多营收（不超过 100%）
+            if (typeof founderPublisherBonus === "function") shareMultiplier = Math.min(1, shareMultiplier + founderPublisherBonus());
             const repMultiplier = typeof platformRevenueMultiplier === "function" ? platformRevenueMultiplier(game.platform) : 1.0;
             const thisWeekRev = Math.round(baseRevenue * decay * shareMultiplier * repMultiplier);
             weeklySales += thisWeekRev;
@@ -172,6 +174,9 @@ function weeklyStep() {
 
     // 平台信誉每周向中位回归
     if (typeof driftPlatformRep === "function") driftPlatformRep();
+
+    // 创始人「创意激发」冷却递减
+    if (typeof tickCreativeCooldown === "function") tickCreativeCooldown();
 
     // 趋势刷新
     if (Math.random() < trendUpdateChance()) {

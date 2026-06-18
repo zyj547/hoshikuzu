@@ -9,15 +9,25 @@ const HIRING_RARITIES = {
 
 function rollHiringRarity(forceSSR = false) {
     if (forceSSR) return "SSR";
+    const ssrBonus = typeof founderSsrBonus === "function" ? founderSsrBonus() : 0;
     const roll = Math.random();
-    if (roll < 0.12) return "SSR";
-    if (roll < 0.42) return "SR";
+    if (roll < 0.12 + ssrBonus) return "SSR";
+    if (roll < 0.42 + ssrBonus) return "SR";
     return "R";
+}
+
+// 创始人「领袖魅力」专长对招聘相关花费的折扣
+function hireCostMult() {
+    return typeof founderHiringMult === "function" ? founderHiringMult() : 1;
+}
+
+function effectiveHireCost(cand) {
+    return Math.round(cand.cost * hireCostMult());
 }
 
 function getHiringRefreshCost() {
     const year = gameState && gameState.date ? gameState.date.year : 1;
-    return 1800 + Math.max(0, year - 1) * 600;
+    return Math.round((1800 + Math.max(0, year - 1) * 600) * hireCostMult());
 }
 
 function getSsrPityRemaining() {
@@ -127,7 +137,7 @@ function loadStaffRecruits() {
                 <span class="candidate-salary" style="color: var(--accent-neon);">${salaryEfficiency}</span>
             </div>
             <button class="btn-hire" onclick="hireCandidate(${idx})">
-                签订雇佣合同 (手续费 ¥${cand.cost})
+                签订雇佣合同 (手续费 ¥${effectiveHireCost(cand)})
             </button>
         ` };
     });
@@ -158,12 +168,12 @@ function hireCandidate(idx) {
         alert(`当前办公室卡座已满！请先扩建工位（当前 ${officeSlots} 个）。`);
         return;
     }
-    if (gameState.funds < cand.cost) {
+    if (gameState.funds < effectiveHireCost(cand)) {
         alert("资金不足以支付入职雇佣手续费！");
         return;
     }
 
-    gameState.funds -= cand.cost;
+    gameState.funds -= effectiveHireCost(cand);
     const contractYears = 1 + Math.floor(Math.random() * 3); // 1~3 年合同
     gameState.employees.push({
         name: cand.name,

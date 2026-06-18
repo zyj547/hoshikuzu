@@ -14,7 +14,7 @@
     <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"></noscript>
     <link rel="stylesheet" href="assets/css/common.css">
-    <link rel="stylesheet" href="assets/css/simulator.css?v=4">
+    <link rel="stylesheet" href="assets/css/simulator.css?v=5">
 </head>
 <body>
 
@@ -93,6 +93,9 @@
                 <ul class="nav-menu">
                     <li class="nav-item active" id="nav-office">
                         <button onclick="switchScreen('office')"><i class="fa-solid fa-house-laptop"></i>工作室</button>
+                    </li>
+                    <li class="nav-item" id="nav-founder">
+                        <button onclick="switchScreen('founder')"><i class="fa-solid fa-user-astronaut"></i>创始人</button>
                     </li>
                     <li class="nav-item" id="nav-develop">
                         <button onclick="switchScreen('develop')"><i class="fa-solid fa-circle-plus"></i>研发新游戏</button>
@@ -241,6 +244,10 @@
                                         <span class="list-lbl">当前热门题材</span>
                                         <span class="list-val" id="aside-trend-topic" style="color: #fff;">打工人</span>
                                     </div>
+                                    <div class="list-item" id="aside-trend-next-row" style="display:none;">
+                                        <span class="list-lbl">🔮 下季预测</span>
+                                        <span class="list-val" id="aside-trend-next" style="color: var(--accent-purple);">—</span>
+                                    </div>
                                     <div class="list-item">
                                         <span class="list-lbl">建议动作</span>
                                         <span class="list-val" id="aside-next-action" style="color: var(--accent-yellow);">观察市场</span>
@@ -248,6 +255,30 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- 3.1b 创始人专长面板 -->
+                <div class="screen-panel" id="panel-founder">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="fa-solid fa-user-astronaut" style="color: var(--accent-purple);"></i>创始人专长树</h2>
+                        <p class="panel-desc">主导发行作品可积累创始人经验，升级后投入专长点，解锁强力的被动与主动能力。</p>
+                    </div>
+
+                    <div class="founder-hero glass-box">
+                        <div class="founder-hero-main">
+                            <span class="founder-hero-level" id="founder-level">Lv.1</span>
+                            <div class="founder-xp-track"><div class="founder-xp-bar" id="founder-xp-bar"></div></div>
+                            <span class="founder-xp-text" id="founder-xp-text">0 / 100 XP</span>
+                        </div>
+                        <div class="founder-hero-tp">
+                            <span class="founder-tp-label">可用专长点</span>
+                            <span class="founder-tp-val" id="founder-tp">0</span>
+                        </div>
+                    </div>
+
+                    <div class="founder-talents" id="founder-talents">
+                        <!-- 动态渲染四条专长分支 -->
                     </div>
                 </div>
 
@@ -740,19 +771,20 @@
     <!-- ==========================================================================
        5. 游戏Tycoon引擎逻辑 (Simulator Engine Script)
        ========================================================================== -->
-    <script src="assets/js/data.js?v=4"></script>
-    <script src="assets/js/simulator/ui-modals.js?v=4"></script>
-    <script src="assets/js/simulator/state.js?v=4"></script>
-    <script src="assets/js/simulator/stages.js?v=4"></script>
-    <script src="assets/js/simulator/contracts.js?v=4"></script>
-    <script src="assets/js/simulator/platform-rep.js?v=4"></script>
-    <script src="assets/js/simulator/storage.js?v=4"></script>
+    <script src="assets/js/data.js?v=5"></script>
+    <script src="assets/js/simulator/ui-modals.js?v=5"></script>
+    <script src="assets/js/simulator/state.js?v=5"></script>
+    <script src="assets/js/simulator/stages.js?v=5"></script>
+    <script src="assets/js/simulator/contracts.js?v=5"></script>
+    <script src="assets/js/simulator/platform-rep.js?v=5"></script>
+    <script src="assets/js/simulator/founder-talents.js?v=5"></script>
+    <script src="assets/js/simulator/storage.js?v=5"></script>
     <script src="assets/js/simulator/audio.js"></script>
-    <script src="assets/js/simulator/boot.js?v=4"></script>
-    <script src="assets/js/simulator/game-loop.js?v=4"></script>
-    <script src="assets/js/simulator/development.js?v=4"></script>
-    <script src="assets/js/simulator/team-research-events.js?v=4"></script>
-    <script src="assets/js/simulator/views.js?v=4"></script>
-    <script src="assets/js/simulator/meta-systems.js?v=4"></script>
+    <script src="assets/js/simulator/boot.js?v=5"></script>
+    <script src="assets/js/simulator/game-loop.js?v=5"></script>
+    <script src="assets/js/simulator/development.js?v=5"></script>
+    <script src="assets/js/simulator/team-research-events.js?v=5"></script>
+    <script src="assets/js/simulator/views.js?v=5"></script>
+    <script src="assets/js/simulator/meta-systems.js?v=5"></script>
 </body>
 </html>

@@ -61,6 +61,13 @@ function createDefaultGameState() {
         rp: 10,
         date: { year: 1, month: 1, week: 1 },
         founderBackground: null, // 开局选择前为 null，选择后写入背景 key
+        founderLevel: 1,
+        founderXp: 0,
+        talentPoints: 0,
+        talents: { management: 0, leadership: 0, creative: 0, business: 0 },
+        creativeCooldown: 0,  // 创意激发剩余冷却周数
+        creativeArmed: false, // 创意激发已激活、待下次发行消耗
+        nextTrend: null,      // 商业嗅觉：预知的下季趋势
         employees: [
             { id: "player", name: "创始人(您)", role: "designer", stats: { code: 15, art: 10, design: 20 }, salary: 0, level: 1, xp: 0, trait: "multi", morale: 78, fatigue: 0, contractWeeksLeft: null, contractYears: 0, pendingRenewal: false }
         ],
@@ -308,6 +315,17 @@ function sanitizeSave(rawSave) {
         .filter(Boolean)
         .map(p => { p.isAux = true; return p; });
     clean.founderBackground = enumValue(migrated.founderBackground, Object.keys(FOUNDER_BACKGROUNDS), null);
+    clean.founderLevel = clampInteger(migrated.founderLevel, 1, 99, 1);
+    clean.founderXp = clampInteger(migrated.founderXp, 0, 9999999, 0);
+    clean.talentPoints = clampInteger(migrated.talentPoints, 0, 99, 0);
+    clean.talents = Object.keys(FOUNDER_TALENTS).reduce((acc, k) => {
+        acc[k] = clampInteger(migrated.talents && migrated.talents[k], 0, FOUNDER_TALENT_MAX, 0);
+        return acc;
+    }, {});
+    clean.creativeCooldown = clampInteger(migrated.creativeCooldown, 0, 99, 0);
+    clean.creativeArmed = Boolean(migrated.creativeArmed);
+    clean.nextTrend = (migrated.nextTrend && Object.keys(GENRES_DATA).includes(migrated.nextTrend.genre) && Object.keys(TOPICS_DATA).includes(migrated.nextTrend.topic))
+        ? { genre: migrated.nextTrend.genre, topic: migrated.nextTrend.topic } : null;
     clean.recentGenres = (Array.isArray(migrated.recentGenres) ? migrated.recentGenres : [])
         .filter(g => Object.keys(GENRES_DATA).includes(g)).slice(-5);
     clean.platformRep = Object.keys(PLATFORM_REP_CONFIG).reduce((acc, k) => {

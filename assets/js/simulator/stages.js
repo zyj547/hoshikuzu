@@ -35,7 +35,10 @@ function stageMoraleBonus() {
 // 独立作坊/新生工作室：0；正规化企业：1；行业巨头：2
 function stageParallelCap() {
     const caps = [0, 0, 1, 2];
-    return caps[currentStageIndex()] || 0;
+    const base = caps[currentStageIndex()] || 0;
+    const talentBonus = typeof founderParallelBonus === "function" ? founderParallelBonus() : 0;
+    // 仅在已解锁并行（base>0）时，专长才追加槽位
+    return base > 0 ? base + talentBonus : 0;
 }
 
 // 计算晋级到下一阶段的逐条资格（手动晋级用）

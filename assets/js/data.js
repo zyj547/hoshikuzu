@@ -80,6 +80,38 @@
         };
 
         // ==========================================================================
+        // 创始人专长树 (Founder Talent Tree)
+        // 创始人通过主导（发行主项目）获得经验升级，每级 1 专长点，可投入四条分支。
+        // ==========================================================================
+        const FOUNDER_TALENT_MAX = 3; // 每条分支最高等级
+        const FOUNDER_TALENTS = {
+            "management": {
+                name: "项目管理", icon: "fa-solid fa-diagram-project", color: "var(--accent-neon)",
+                type: "被动",
+                desc: "精通研发节奏，团队研发产出更高；满级额外解锁 1 个并行辅助项目槽位。",
+                levelDesc: lv => `研发产出 +${lv * 8}%` + (lv >= FOUNDER_TALENT_MAX ? "，并行槽位 +1" : "")
+            },
+            "leadership": {
+                name: "领袖魅力", icon: "fa-solid fa-handshake-angle", color: "var(--accent-yellow)",
+                type: "被动",
+                desc: "个人魅力降低招聘与刷新成本，并提升高端人才（SSR）出现概率。",
+                levelDesc: lv => `招聘成本 -${lv * 10}%，SSR 概率 +${lv * 3}%`
+            },
+            "creative": {
+                name: "创意激发", icon: "fa-solid fa-wand-magic-sparkles", color: "var(--accent-pink)",
+                type: "主动",
+                desc: "主动技能：激活后下一款发行作品获得评分加成（冷却随等级缩短）。",
+                levelDesc: lv => `下作评分 +${5 + lv * 3}%，冷却 ${Math.max(4, 16 - lv * 3)} 周`
+            },
+            "business": {
+                name: "商业嗅觉", icon: "fa-solid fa-chart-line", color: "var(--accent-purple)",
+                type: "被动",
+                desc: "提前预知下季市场趋势，并在发行分成谈判中占据优势（保留更多营收）。",
+                levelDesc: lv => `趋势预测解锁，发行分成 +${lv * 5}%`
+            }
+        };
+
+        // ==========================================================================
         // 平台信誉与淘汰 (Platform Reputation)
         // 在某平台连续发布低分作品会拉低该平台信誉：降低营收、甚至被高端平台拒绝合作。
         // premium 平台信誉过低会被锁定立项，需靠时间回暖或在其它平台积累口碑后恢复。

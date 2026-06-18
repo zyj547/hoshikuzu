@@ -243,6 +243,8 @@ function startDevelopment() {
 // ==========================================================================
 // 向某个项目注入一周的研发点数（rate 为团队产能占比，辅助项目额外打折）
 function addProjectPoints(proj, rate) {
+    // 创始人「项目管理」专长全局提升研发产出
+    if (typeof founderDevBonus === "function") rate *= founderDevBonus();
     gameState.employees.forEach(emp => {
         const eff = employeeEfficiency(emp);
         const isFounder = emp.id === "player";
@@ -612,6 +614,9 @@ function releaseGame(publisherType) {
     gameState.recentGenres = (gameState.recentGenres || []).concat(proj.genre).slice(-5);
     // 平台信誉调整
     if (typeof updatePlatformRepOnRelease === "function") updatePlatformRepOnRelease(proj.platform, finalScore);
+    // 创始人主导经验 + 消耗创意激发
+    if (typeof gainFounderXp === "function") gainFounderXp(finalScore * 12);
+    if (typeof consumeCreativeSpark === "function") consumeCreativeSpark();
     gameState.currentProject = null;
     currentHandCards = [];
 
@@ -648,6 +653,11 @@ function buildReleaseEvaluation(proj) {
     // 艺术大师：所有项目基础评分 +5%
     let founderArtBonus = 1.0;
     if (gameState.founderBackground === "artist") { founderArtBonus = 1.05; baseScore *= founderArtBonus; }
+
+    // 创始人「创意激发」主动技能：本次发行评分加成（仅主项目消耗，辅助项目不触发）
+    if (!proj.isAux && typeof founderCreativeMultiplier === "function") {
+        baseScore *= founderCreativeMultiplier();
+    }
 
     // 市场疲劳衰减
     const fatigueMul = marketFatiguePenalty(proj.genre);

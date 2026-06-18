@@ -20,6 +20,7 @@ function switchScreen(screenId) {
 
     // 特殊页面数据刷新
     if (screenId === "office") loadOfficeDesks();
+    if (screenId === "founder" && typeof renderFounderPanel === "function") renderFounderPanel();
     if (screenId === "develop") setupDevelopForm();
     if (screenId === "staff") loadStaffRecruits();
     if (screenId === "research") loadResearchTree();
@@ -376,6 +377,19 @@ function updateStatsUI() {
     document.getElementById("aside-trend-genre").innerText = GENRES_DATA[gameState.activeTrend.genre].name;
     document.getElementById("aside-trend-topic").innerText = TOPICS_DATA[gameState.activeTrend.topic].name;
 
+    // 商业嗅觉：下季趋势预测
+    const trendNextRow = document.getElementById("aside-trend-next-row");
+    if (trendNextRow) {
+        const predict = typeof founderTrendPredictUnlocked === "function" && founderTrendPredictUnlocked();
+        if (predict && gameState.nextTrend) {
+            trendNextRow.style.display = "";
+            document.getElementById("aside-trend-next").innerText =
+                `${GENRES_DATA[gameState.nextTrend.genre].name} / ${TOPICS_DATA[gameState.nextTrend.topic].name}`;
+        } else {
+            trendNextRow.style.display = "none";
+        }
+    }
+
     // 公司发展阶段简报
     if (typeof renderStageBrief === "function") renderStageBrief();
 
@@ -409,9 +423,19 @@ function renderAuxProjects() {
 function updateTrends() {
     const genres = Object.keys(GENRES_DATA);
     const topics = Object.keys(TOPICS_DATA);
-    gameState.activeTrend.genre = genres[Math.floor(Math.random() * genres.length)];
-    gameState.activeTrend.topic = topics[Math.floor(Math.random() * topics.length)];
-    
+    const rollTrend = () => ({ genre: genres[Math.floor(Math.random() * genres.length)], topic: topics[Math.floor(Math.random() * topics.length)] });
+
+    // 商业嗅觉预知：若已有预测的下季趋势，本次直接采用它，再预滚下一季
+    if (gameState.nextTrend) {
+        gameState.activeTrend.genre = gameState.nextTrend.genre;
+        gameState.activeTrend.topic = gameState.nextTrend.topic;
+    } else {
+        const cur = rollTrend();
+        gameState.activeTrend.genre = cur.genre;
+        gameState.activeTrend.topic = cur.topic;
+    }
+    gameState.nextTrend = rollTrend();
+
     // 弹出轻微通知提示
     spawnFloatingText("市场趋势发生偏转！", "stat-date", "design");
 }
