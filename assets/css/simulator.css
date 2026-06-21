@@ -525,6 +525,10 @@
             grid-template-columns: 1fr 1fr;
             grid-auto-rows: minmax(38px, auto);
         }
+        .staff-action-row.solo {
+            display: block;
+            margin-top: 0.45rem;
+        }
         .staff-action-btn,
         .staff-empty-action {
             width: 100%;
@@ -651,18 +655,27 @@
         }
         .list-lbl {
             color: var(--text-secondary);
-            min-width: 0;
+            flex-shrink: 0;
+            white-space: nowrap;
             line-height: 1.35;
-            overflow-wrap: anywhere;
         }
         .list-val {
             font-weight: 600;
             text-align: right;
-            min-width: fit-content;
+            min-width: 0;
             line-height: 1.35;
             overflow-wrap: anywhere;
         }
         .list-val.accent { color: var(--accent-neon); }
+        /* 晋级进度等长文本行：标签在上、数值整行换行显示 */
+        .list-item.stacked {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.25rem;
+        }
+        .list-item.stacked .list-val {
+            text-align: left;
+        }
         .weekly-bill-details {
             display: none;
             background: rgba(0,0,0,0.3);

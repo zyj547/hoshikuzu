@@ -84,6 +84,38 @@ function nextActionHint(weeklyOut) {
     return "冲击趋势题材";
 }
 
+// 培训前的详细说明确认弹窗（确认后才执行 trainEmployee）
+async function confirmTrain(i) {
+    const emp = gameState.employees[i];
+    if (!emp) return;
+    let cost = emp.level * 4000;
+    if (emp.trait === "lazy") cost = Math.round(cost / 2);
+    const msg = `
+        <div style="text-align:left; line-height:1.7;">
+            <div style="font-weight:700; color:#fff; margin-bottom:0.4rem;">🎓 培训【${escapeHtml(emp.name)}】</div>
+            <div>费用：<b style="color:var(--accent-pink);">¥${cost.toLocaleString()}</b></div>
+            <div>效果：等级 +1，对应专业属性显著成长，月薪上调约 25%。</div>
+            ${emp.trait === "lazy" ? `<div style="color:var(--accent-yellow);">（摸鱼达人：培训费减半，但属性成长更随机）</div>` : ""}
+            <div style="margin-top:0.45rem; opacity:0.85;">确定为其安排培训吗？</div>
+        </div>`;
+    if (await confirm(msg, "员工培训")) trainEmployee(i);
+}
+
+// 休整前的详细说明确认弹窗（确认后才执行 restEmployee）
+async function confirmRest(i) {
+    const emp = gameState.employees[i];
+    if (!emp) return;
+    const cost = Math.max(800, Math.round(emp.salary * 0.6));
+    const msg = `
+        <div style="text-align:left; line-height:1.7;">
+            <div style="font-weight:700; color:#fff; margin-bottom:0.4rem;">☕ 带薪休整【${escapeHtml(emp.name)}】</div>
+            <div>费用：<b style="color:var(--accent-pink);">¥${cost.toLocaleString()}</b></div>
+            <div>效果：疲劳 -35，心情 +18。</div>
+            <div style="margin-top:0.45rem; opacity:0.85;">确定安排休整吗？</div>
+        </div>`;
+    if (await confirm(msg, "带薪休整")) restEmployee(i);
+}
+
 // 渲染办公室列表
 function loadOfficeDesks() {
     const container = document.getElementById("office-desks");
@@ -120,10 +152,15 @@ function loadOfficeDesks() {
                 if (emp.role === "designer") tagColor = "var(--accent-yellow)";
                 specialtyTagHtml = `<span class="specialty-tag" style="border-color:${tagColor}; color:${tagColor}; text-shadow:0 0 5px ${tagColor};">${specialtyNames[emp.specialty]}</span>`;
             }
-            // 稀有度徽章
-            const empRarityKey = emp.rarity || "R";
-            const empRarity = HIRING_RARITIES[empRarityKey];
-            const rarityBadgeHtml = `<span class="desk-rarity-badge" style="color:${empRarity.color}; border-color:${empRarity.color};">${empRarity.name}</span>`;
+            // 品质徽章：创始人显示成长称号，其余员工显示抽卡稀有度
+            let rarityBadgeHtml;
+            if (i === 0 || emp.id === "player") {
+                const ft = founderTitle();
+                rarityBadgeHtml = `<span class="desk-rarity-badge" style="color:${ft.color}; border-color:${ft.color};"><i class="${ft.icon}"></i> ${ft.name}</span>`;
+            } else {
+                const empRarity = HIRING_RARITIES[emp.rarity || "R"];
+                rarityBadgeHtml = `<span class="desk-rarity-badge" style="color:${empRarity.color}; border-color:${empRarity.color};">${empRarity.name}</span>`;
+            }
             const morale = emp.morale == null ? 75 : emp.morale;
             const fatigue = emp.fatigue || 0;
             const efficiency = Math.round(employeeEfficiency(emp) * 100);
@@ -135,25 +172,27 @@ function loadOfficeDesks() {
                 : `<button class="btn-research staff-action-btn fire" onclick="fireEmployee(${i})">开除</button>`;
             let actionButtonHtml = `
                 <div class="staff-action-row compact">
-                    <button class="btn-research staff-action-btn train" onclick="trainEmployee(${i})">
-                        培训 (¥${emp.level * 4000})
+                    <button class="btn-research staff-action-btn train" onclick="confirmTrain(${i})">
+                        培训
                     </button>
-                    <button class="btn-research staff-action-btn rest" onclick="restEmployee(${i})">
-                        休整 (¥${restCost})
+                    <button class="btn-research staff-action-btn rest" onclick="confirmRest(${i})">
+                        休整
                     </button>
+                </div>
+                <div class="staff-action-row solo">
                     ${fireButtonHtml}
                 </div>
             `;
             if (emp.level >= 5 && !emp.specialty) {
                 actionButtonHtml = `
                     <div class="staff-action-row compact">
-                        <button class="btn-research staff-action-btn train" onclick="trainEmployee(${i})">
-                            培训 (¥${emp.level * 4000})
+                        <button class="btn-research staff-action-btn train" onclick="confirmTrain(${i})">
+                            培训
                         </button>
                         <button class="btn-research staff-action-btn specialize" onclick="openSpecialtyModal(${i})">
                             专精
                         </button>
-                        <button class="btn-research staff-action-btn rest" onclick="restEmployee(${i})">
+                        <button class="btn-research staff-action-btn rest" onclick="confirmRest(${i})">
                             休整
                         </button>
                         ${fireButtonHtml}

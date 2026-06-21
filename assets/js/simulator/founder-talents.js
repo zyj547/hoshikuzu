@@ -9,6 +9,7 @@ function founderXpForNext() {
 
 // 主导项目发行后获得经验（在 releaseGame 主项目路径调用）
 function gainFounderXp(amount) {
+    const titleBefore = founderTitle().name;
     gameState.founderXp = (gameState.founderXp || 0) + Math.max(0, Math.round(amount));
     let leveled = 0;
     while (gameState.founderXp >= founderXpForNext()) {
@@ -20,6 +21,10 @@ function gainFounderXp(amount) {
     if (leveled > 0) {
         addChronicleEntry(`🌟 创始人成长至 Lv.${gameState.founderLevel}，获得 ${leveled} 点专长点！`);
         if (typeof playSFX === "function") playSFX("upgrade");
+        const titleAfter = founderTitle().name;
+        if (titleAfter !== titleBefore) {
+            addChronicleEntry(`🎖️ 创始人晋升为【${titleAfter}】！`);
+        }
     }
 }
 
@@ -90,7 +95,8 @@ function renderFounderPanel() {
     const xpText = document.getElementById("founder-xp-text");
     const tpEl = document.getElementById("founder-tp");
     const bg = gameState.founderBackground ? FOUNDER_BACKGROUNDS[gameState.founderBackground] : null;
-    if (lvEl) lvEl.innerHTML = `${bg ? `<i class="${bg.icon}" style="color:${bg.color};"></i> ${bg.name} · ` : ""}Lv.${gameState.founderLevel}`;
+    const ft = founderTitle();
+    if (lvEl) lvEl.innerHTML = `${bg ? `<i class="${bg.icon}" style="color:${bg.color};"></i> ${bg.name} · ` : ""}<i class="${ft.icon}" style="color:${ft.color};"></i> ${ft.name} · Lv.${gameState.founderLevel}`;
     if (xpBar) xpBar.style.width = `${Math.min(100, (gameState.founderXp / founderXpForNext()) * 100)}%`;
     if (xpText) xpText.innerText = `${gameState.founderXp} / ${founderXpForNext()} XP`;
     if (tpEl) tpEl.innerText = gameState.talentPoints || 0;
