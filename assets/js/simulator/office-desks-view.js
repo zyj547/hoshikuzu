@@ -82,8 +82,10 @@ function loadOfficeDesks() {
             const loyalty = emp.loyalty == null ? (emp.id === "player" ? 100 : 55) : emp.loyalty;
             const efficiency = Math.round(employeeEfficiency(emp) * 100);
             const insightChipHtml = typeof employeeInsightChipHtml === "function" ? employeeInsightChipHtml(emp, gameState) : "";
+            const isFounder = i === 0 || emp.id === "player";
+            const salaryText = isFounder ? "创始人 · 不领薪" : `月薪 ¥${(emp.salary || 0).toLocaleString()}`;
             const fireButtonHtml = i === 0 || emp.id === "player"
-                ? `<button type="button" class="btn-research staff-action-btn founder-lock" disabled><i class="fa-solid fa-crown"></i> 创始人</button>`
+                ? `<div class="staff-founder-badge"><i class="fa-solid fa-crown"></i> 创始人</div>`
                 : `<button type="button" class="btn-research staff-action-btn fire" onclick="fireEmployee(${i})">开除</button>`;
             const specializeButtonHtml = emp.level >= 5 && !emp.specialty
                 ? `<button type="button" class="btn-research staff-action-btn specialize" onclick="openSpecialtyModal(${i})">专精</button>`
@@ -103,6 +105,7 @@ function loadOfficeDesks() {
                             ${specialtyTagHtml}
                         </div>
                         <span class="staff-level">${roleNameText} · Lv.${emp.level}</span>
+                        <span class="staff-payline">${salaryText}</span>
                         ${typeof employeeTagHtml === "function" ? employeeTagHtml(emp) : ""}
                     </div>
                 </div>
@@ -220,6 +223,7 @@ function openOfficeDeskDetail(idx) {
             <div class="candidate-detail-stat"><b style="color: var(--accent-yellow);">${emp.stats?.design || 0}</b><span>策划</span></div>
         </div>
         <div class="candidate-detail-lines">
+            <div><span>月薪</span><b>${isFounder ? "不领薪" : `¥${(emp.salary || 0).toLocaleString()}`}</b></div>
             <div><span>心情</span><b>${Math.round(morale)}</b></div>
             <div><span>情绪</span><b>${Math.round(satisfaction)}</b></div>
             <div><span>忠诚</span><b>${Math.round(loyalty)}</b></div>
