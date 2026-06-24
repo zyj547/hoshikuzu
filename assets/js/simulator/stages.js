@@ -1,6 +1,5 @@
 // ==========================================================================
-// 公司发展阶段系统 (Company Stage Progression)
-// 按累计发布数 / 粉丝 / 资金里程碑自动晋级，提升工位上限、基础士气与团队效率。
+// Company stage progression.
 // ==========================================================================
 
 function currentStageIndex() {
@@ -16,32 +15,25 @@ function nextStage() {
     return idx < COMPANY_STAGES.length - 1 ? COMPANY_STAGES[idx + 1] : null;
 }
 
-// 当前阶段的工位上限
 function stageSlotCap() {
     return currentStage().slotCap;
 }
 
-// 当前阶段的团队效率加成（叠加在个人效率上）
 function stageEfficiencyBonus() {
     return currentStage().efficiencyBonus;
 }
 
-// 当前阶段的基础士气加成（计入有效士气）
 function stageMoraleBonus() {
     return currentStage().moraleBonus;
 }
 
-// 当前阶段可同时运行的「并行辅助项目」数量上限（主项目之外）
-// 独立作坊/新生工作室：0；正规化企业：1；行业巨头：2
 function stageParallelCap() {
     const caps = [0, 0, 1, 2];
     const base = caps[currentStageIndex()] || 0;
     const talentBonus = typeof founderParallelBonus === "function" ? founderParallelBonus() : 0;
-    // 仅在已解锁并行（base>0）时，专长才追加槽位
     return base > 0 ? base + talentBonus : 0;
 }
 
-// 计算晋级到下一阶段的逐条资格（手动晋级用）
 function getStageUpEligibility() {
     const next = nextStage();
     if (!next) return { next: null, conditions: [], allMet: false, isMax: true };
@@ -50,12 +42,15 @@ function getStageUpEligibility() {
         { label: "累计发布游戏", current: gameState.releases.length, need: req.releases, unit: "款", met: gameState.releases.length >= req.releases },
         { label: "总粉丝数", current: gameState.fans, need: req.fans, unit: "人", met: gameState.fans >= req.fans },
         { label: "工作室资金", current: Math.round(gameState.funds), need: req.funds, unit: "¥", met: gameState.funds >= req.funds }
-    ].filter(c => c.need > 0); // 门槛为 0 的条件不展示
-    const allMet = conditions.every(c => c.met);
-    return { next, conditions, allMet, isMax: false };
+    ].filter(c => c.need > 0);
+    return { next, conditions, allMet: conditions.every(c => c.met), isMax: false };
 }
 
-// 打开晋级评估弹窗
+function formatStageValue(value, unit) {
+    if (unit === "¥") return `¥${Number(value || 0).toLocaleString()}`;
+    return `${Number(value || 0).toLocaleString()}${unit}`;
+}
+
 function openStageUpModal() {
     if (typeof playSFX === "function") playSFX("click");
     const elig = getStageUpEligibility();
@@ -64,10 +59,11 @@ function openStageUpModal() {
     const bodyEl = document.getElementById("stageup-modal-body");
     const btn = document.getElementById("stageup-confirm-btn");
     const cur = currentStage();
+    if (!modal || !titleEl || !bodyEl || !btn) return;
 
     if (elig.isMax) {
         titleEl.innerHTML = `<i class="fa-solid fa-crown"></i> 已达最高阶段`;
-        bodyEl.innerHTML = `<p style="text-align:center; color:var(--accent-pink); padding:1rem 0;">「${cur.name}」已是行业之巅，无更高阶段可晋级。</p>`;
+        bodyEl.innerHTML = `<p style="text-align:center; color:var(--accent-pink); padding:1rem 0;">《${cur.name}》已经是行业顶点，暂无更高阶段可晋级。</p>`;
         btn.style.display = "none";
         modal.classList.add("active");
         return;
@@ -76,16 +72,14 @@ function openStageUpModal() {
     const next = elig.next;
     titleEl.innerHTML = `<i class="${next.icon}"></i> 申请晋级：${next.name}`;
     const rows = elig.conditions.map(c => {
-        const curText = c.unit === "¥" ? `¥${c.current.toLocaleString()}` : `${c.current.toLocaleString()}${c.unit}`;
-        const needText = c.unit === "¥" ? `¥${c.need.toLocaleString()}` : `${c.need.toLocaleString()}${c.unit}`;
         const icon = c.met
             ? `<i class="fa-solid fa-circle-check" style="color:var(--accent-neon);"></i>`
             : `<i class="fa-solid fa-circle-xmark" style="color:var(--accent-pink);"></i>`;
         return `
-            <div class="stageup-cond ${c.met ? 'met' : 'unmet'}">
+            <div class="stageup-cond ${c.met ? "met" : "unmet"}">
                 <span class="stageup-cond-icon">${icon}</span>
                 <span class="stageup-cond-label">${c.label}</span>
-                <span class="stageup-cond-val">${curText} / ${needText}</span>
+                <span class="stageup-cond-val">${formatStageValue(c.current, c.unit)} / ${formatStageValue(c.need, c.unit)}</span>
             </div>`;
     }).join("");
 
@@ -115,10 +109,9 @@ function openStageUpModal() {
 
 function closeStageUpModal() {
     if (typeof playSFX === "function") playSFX("click");
-    document.getElementById("stageup-modal").classList.remove("active");
+    document.getElementById("stageup-modal")?.classList.remove("active");
 }
 
-// 确认晋级（仅在资格达标时生效）
 function confirmStageUp() {
     const elig = getStageUpEligibility();
     if (!elig.allMet || !elig.next) return;
@@ -126,10 +119,11 @@ function confirmStageUp() {
     gameState.companyStage = currentStageIndex() + 1;
     const stage = currentStage();
     applyStageBodyClass();
-    addChronicleEntry(`🏛️ 公司晋级成功！「${stage.name}」阶段开启——${stage.desc}`);
+    addChronicleEntry(`🏢 公司晋级成功！《${stage.name}》阶段开启，${stage.desc}`);
     saveGame();
     updateStatsUI();
     loadOfficeDesks();
+
     const hero = document.getElementById("stage-hero");
     if (hero) {
         hero.classList.remove("upgraded");
@@ -137,17 +131,15 @@ function confirmStageUp() {
         hero.classList.add("upgraded");
     }
 
-    document.getElementById("stageup-modal").classList.remove("active");
+    document.getElementById("stageup-modal")?.classList.remove("active");
     playStageUpEffect(stage);
 }
 
-// 晋级成功特效：全屏光爆 + 阶段铭牌 + 礼花粒子
 function playStageUpEffect(stage) {
     if (typeof playSFX === "function") playSFX("upgrade");
     const fx = document.getElementById("stageup-fx");
     if (!fx) return;
 
-    // 礼花粒子
     const colors = ["#00f0ff", "#d946ef", "#fbbf24", "#10b981", "#ffffff"];
     let confetti = "";
     for (let i = 0; i < 36; i++) {
@@ -176,7 +168,6 @@ function playStageUpEffect(stage) {
     }, 2600);
 }
 
-// 根据阶段切换页面背景氛围
 function applyStageBodyClass() {
     const idx = currentStageIndex();
     document.body.classList.remove("stage-0", "stage-1", "stage-2", "stage-3");
@@ -196,10 +187,9 @@ function showStageUpModal(stage) {
                 <span>团队效率 <b style="color:var(--accent-yellow);">+${Math.round(stage.efficiencyBonus * 100)}%</b></span>
             </div>
         </div>`;
-    alert(msg, "🎉 公司发展里程碑");
+    alert(msg, "公司发展里程碑");
 }
 
-// 渲染运营简报里的阶段进度
 function renderStageBrief() {
     const stage = currentStage();
     const idx = currentStageIndex();
@@ -209,6 +199,7 @@ function renderStageBrief() {
         topChip.innerHTML = `<i class="${stage.icon}"></i> ${stage.name}`;
         topChip.style.color = stage.color;
     }
+
     const hero = document.getElementById("stage-hero");
     if (hero) {
         hero.className = `stage-hero stage-hero-${idx}`;
@@ -232,12 +223,14 @@ function renderStageBrief() {
         if (heroMorale) heroMorale.innerText = `士气 +${stage.moraleBonus}`;
         if (heroEff) heroEff.innerText = `效率 +${Math.round(stage.efficiencyBonus * 100)}%`;
     }
+
     const stageNameEl = document.getElementById("aside-stage-name");
     if (stageNameEl) {
         stageNameEl.className = `list-val stage-badge stage-badge-${idx}`;
         stageNameEl.innerHTML = `<i class="${stage.icon}"></i><span>${stage.name}</span>`;
         stageNameEl.style.color = stage.color;
     }
+
     const btn = document.getElementById("aside-stageup-btn");
     const progEl = document.getElementById("aside-stage-next");
     if (!progEl) return;
@@ -250,23 +243,25 @@ function renderStageBrief() {
         if (btn) btn.style.display = "none";
         return;
     }
+
     if (btn) {
         btn.style.display = "";
         const ready = getStageUpEligibility().allMet;
         btn.classList.toggle("ready", ready);
         btn.innerHTML = ready
-            ? `<i class="fa-solid fa-arrow-trend-up"></i> 可晋级「${next.name}」！`
+            ? `<i class="fa-solid fa-arrow-trend-up"></i> 可晋级《${next.name}》！`
             : `<i class="fa-solid fa-arrow-trend-up"></i> 申请晋级公司阶段`;
     }
+
     const req = next.require;
     const parts = [];
     if (gameState.releases.length < req.releases) parts.push(`作品 ${gameState.releases.length}/${req.releases}`);
     if (gameState.fans < req.fans) parts.push(`粉丝 ${Math.round(gameState.fans / 1000)}k/${Math.round(req.fans / 1000)}k`);
     if (gameState.funds < req.funds) parts.push(`资金 ${Math.round(gameState.funds / 1000)}k/${Math.round(req.funds / 1000)}k`);
     progEl.innerHTML = parts.length
-        ? `<span class="stage-progress-line">距「${next.name}」：${parts.join("，")}</span>
+        ? `<span class="stage-progress-line">距《${next.name}》：${parts.join("，")}</span>
            <span class="stage-bonus-row">当前加成：工位 ${stage.slotCap} · 士气 +${stage.moraleBonus} · 效率 +${Math.round(stage.efficiencyBonus * 100)}%</span>`
-        : `<span class="stage-progress-line ready"><i class="fa-solid fa-circle-up"></i> 可晋级「${next.name}」</span>
+        : `<span class="stage-progress-line ready"><i class="fa-solid fa-circle-up"></i> 可晋级《${next.name}》</span>
            <span class="stage-bonus-row">晋级后：工位 ${next.slotCap} · 士气 +${next.moraleBonus} · 效率 +${Math.round(next.efficiencyBonus * 100)}%</span>`;
-    progEl.style.color = parts.length ? "var(--text-secondary)" : "var(--accent-neon)";
+    progEl.style.color = parts.length ? "" : "var(--accent-neon)";
 }

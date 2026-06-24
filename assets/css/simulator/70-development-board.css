@@ -1,0 +1,577 @@
+        /* 鈹€鈹€ Phase Label 鈹€鈹€ */
+        .dev-phase-label {
+            position: absolute;
+            right: 0;
+            top: -1.4rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* 鈹€鈹€ Bug Game HUD 鈹€鈹€ */
+        .bug-game-hud {
+            width: 100%;
+            max-width: 600px;
+            margin: 0.75rem auto;
+        }
+        .bug-hud-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2rem;
+        }
+        .bug-timer-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-pink);
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+        .bug-timer-track {
+            width: 120px;
+            height: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .bug-timer-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, var(--accent-pink), var(--accent-neon));
+            border-radius: 3px;
+            transition: width 1s linear;
+        }
+        .bug-combo-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.15rem;
+        }
+        .combo-label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+        .combo-value {
+            font-family: var(--font-title);
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--accent-yellow);
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        }
+        .spawned-bug.fatal {
+            color: #ef4444 !important;
+            filter: drop-shadow(0 0 8px #ef4444) !important;
+            animation: bug-fatal-pulse 0.6s infinite alternate ease-in-out !important;
+        }
+        .spawned-bug.ghost {
+            color: rgba(124, 58, 237, 0.6) !important;
+            filter: drop-shadow(0 0 5px rgba(124, 58, 237, 0.5)) !important;
+            animation: bug-ghost-flicker 0.3s infinite alternate ease-in-out !important;
+        }
+        @keyframes bug-fatal-pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 5px #ef4444); }
+            100% { transform: scale(1.15); filter: drop-shadow(0 0 12px #ef4444); }
+        }
+        @keyframes bug-ghost-flicker {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.7; }
+        }
+        @keyframes bug-wiggle {
+            0% { transform: translateX(-3px) rotate(-5deg); }
+            100% { transform: translateX(3px) rotate(5deg); }
+        }
+        .combo-flash {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: var(--font-title);
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent-yellow);
+            text-shadow: 0 0 20px rgba(251, 191, 36, 0.8);
+            pointer-events: none;
+            z-index: 200;
+            animation: combo-pop 0.8s ease-out forwards;
+        }
+        @keyframes combo-pop {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
+        /* ==========================================================================
+           v2.0 「掌控与叙事」新增组件样式
+           ========================================================================== */
+
+        /* 推进控制盘（替代旧倍速控制） */
+        .advance-control {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.35rem;
+            margin-left: auto;
+            min-width: 0;
+            width: 100%;
+        }
+        .advance-status {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .advance-btns {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0.35rem;
+        }
+        .advance-btn {
+            min-width: 0;
+            min-height: 34px;
+            padding: 0.36rem 0.45rem;
+            border-radius: 8px;
+            border: 1px solid rgba(0,240,255,0.3);
+            background: rgba(0,240,255,0.05);
+            color: var(--accent-neon);
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .advance-btn:hover:not(:disabled) { background: rgba(0,240,255,0.15); box-shadow: 0 0 10px rgba(0,240,255,0.2); }
+        .advance-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .advance-btn.pause { border-color: var(--accent-yellow); color: var(--accent-yellow); background: rgba(251,191,36,0.08); }
+
+        /* 研发看板：顶部对齐 + 可滚动 */
+        .dev-overlay.active { justify-content: flex-start; overflow-y: auto; }
+        .dev-overlay {
+            padding: 2.4rem clamp(1rem, 4vw, 4rem);
+            background:
+                radial-gradient(circle at 50% 8%, rgba(0,240,255,0.13), transparent 34%),
+                radial-gradient(circle at 60% 42%, rgba(217,70,239,0.10), transparent 38%),
+                rgba(4, 7, 14, 0.985);
+            backdrop-filter: blur(10px);
+        }
+        .dev-header {
+            width: min(860px, 100%);
+            margin-bottom: 1rem;
+            padding: 0.75rem 0.9rem;
+            border: 1px solid rgba(0,240,255,0.14);
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(10,16,32,0.96), rgba(8,10,20,0.88));
+            box-shadow: 0 16px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+            display: grid;
+            grid-template-columns: 92px minmax(0, 1fr);
+            gap: 0.9rem;
+            align-items: center;
+            text-align: left;
+        }
+        .board-project-cover {
+            width: 92px;
+            min-width: 0;
+        }
+        .board-project-cover .project-cover {
+            min-height: 68px;
+            border-radius: 10px;
+            box-shadow: 0 10px 26px rgba(0,0,0,0.32), 0 0 18px color-mix(in srgb, var(--cover-a), transparent 82%);
+        }
+        .board-project-cover .project-cover-top,
+        .board-project-cover .project-cover-bottom {
+            display: none;
+        }
+        .board-project-cover .project-cover::before {
+            width: 72px;
+            height: 72px;
+            right: -24px;
+            top: -24px;
+            border-width: 14px;
+        }
+        .board-project-cover .project-cover-mark {
+            font-size: 1.9rem;
+        }
+        .dev-header-copy {
+            min-width: 0;
+        }
+        .dev-game-name {
+            margin-bottom: 0.25rem;
+            font-size: clamp(1.55rem, 2.6vw, 2.15rem);
+            letter-spacing: 0;
+            line-height: 1.15;
+        }
+        .dev-game-meta {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.55rem;
+            letter-spacing: 0;
+        }
+        .board-stats-row {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(96px, 1fr));
+            gap: 0.75rem;
+            width: min(760px, 100%);
+            margin-bottom: 0.85rem;
+            padding: 0.8rem;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            background: rgba(9, 13, 28, 0.56);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        .board-stats-row .points-counter {
+            min-width: 0;
+            padding: 0.58rem 0.4rem;
+            border-radius: 11px;
+            background: rgba(255,255,255,0.035);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .board-stats-row .points-val {
+            font-size: clamp(1.45rem, 2.4vw, 2rem);
+            line-height: 1;
+        }
+        .board-stats-row .points-lbl {
+            font-size: 0.72rem;
+            color: rgba(226,232,240,0.78);
+        }
+        .dev-progress-shell {
+            width: min(760px, 100%);
+            max-width: none;
+            height: auto;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1.6rem;
+            border: 0;
+            background: transparent;
+        }
+        .dev-progress-track {
+            height: 12px;
+            padding: 2px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+            overflow: hidden;
+            box-shadow: inset 0 0 18px rgba(0,0,0,0.45);
+        }
+        .dev-progress-track .progress-bar {
+            position: relative;
+            height: 100%;
+            background: linear-gradient(90deg, #00f0ff 0%, #35f6c8 42%, #d946ef 100%);
+            box-shadow: 0 0 18px rgba(0,240,255,0.34), 0 0 22px rgba(217,70,239,0.18);
+        }
+        .dev-progress-track .progress-bar::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+            transform: translateX(-100%);
+            animation: devProgressSweep 2.2s ease-in-out infinite;
+        }
+        @keyframes devProgressSweep {
+            0% { transform: translateX(-100%); opacity: 0; }
+            35% { opacity: 0.9; }
+            100% { transform: translateX(100%); opacity: 0; }
+        }
+        .dev-phase-label {
+            position: static;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 128px;
+            min-height: 32px;
+            padding: 0.36rem 0.7rem;
+            border-radius: 999px;
+            border: 1px solid currentColor;
+            background: rgba(6, 9, 18, 0.86);
+            box-shadow: 0 0 18px rgba(251,191,36,0.12);
+            font-size: 0.76rem;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .board-hint {
+            text-align: center;
+            color: rgba(226,232,240,0.82);
+            font-size: 0.92rem;
+            margin: 0.8rem 0 1.1rem;
+            min-height: 1.4rem;
+        }
+
+        /* 三张开发卡 */
+        .dev-board-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            width: 100%;
+            max-width: 920px;
+        }
+        .dev-card {
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 1.1rem;
+            transition: all 0.25s;
+        }
+        .dev-card:hover {
+            border-color: var(--accent-neon);
+            box-shadow: 0 0 18px rgba(0,240,255,0.15);
+            transform: translateY(-3px);
+        }
+        .dev-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-bottom: 0.6rem;
+        }
+        .dev-card-title { font-weight: 800; color: #fff; font-size: 1rem; }
+        .dev-card-tag {
+            font-size: 0.66rem;
+            color: var(--accent-yellow);
+            border: 1px solid rgba(251,191,36,0.3);
+            border-radius: 6px;
+            padding: 0.1rem 0.4rem;
+            white-space: nowrap;
+        }
+        .dev-card-story {
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            flex: 1;
+            margin-bottom: 1rem;
+        }
+        .dev-card-btn {
+            padding: 0.6rem;
+            border-radius: 10px;
+            border: 1px solid var(--accent-neon);
+            background: rgba(0,240,255,0.08);
+            color: var(--accent-neon);
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dev-card-btn:hover { background: rgba(0,240,255,0.2); }
+
+        /* 完成 / 打磨操作区 */
+        .dev-board-finish {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            text-align: center;
+            margin-top: 0.4rem;
+            width: min(720px, 100%);
+        }
+        .dev-finish-card {
+            position: relative;
+            width: 100%;
+            padding: 1.35rem;
+            border-radius: 18px;
+            overflow: hidden;
+            background:
+                linear-gradient(135deg, rgba(0,240,255,0.12), rgba(217,70,239,0.12)),
+                rgba(9, 13, 28, 0.88);
+            border: 1px solid rgba(0,240,255,0.26);
+            box-shadow: 0 22px 70px rgba(0,0,0,0.46), 0 0 32px rgba(0,240,255,0.12);
+        }
+        .dev-finish-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            transform: translateX(-120%);
+            animation: finishCardSweep 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes finishCardSweep {
+            0%, 35% { transform: translateX(-120%); }
+            75%, 100% { transform: translateX(120%); }
+        }
+        .dev-finish-card.complete {
+            border-color: rgba(0,240,255,0.36);
+        }
+        .dev-finish-card.polish {
+            border-color: rgba(251,191,36,0.34);
+            box-shadow: 0 22px 70px rgba(0,0,0,0.46), 0 0 32px rgba(251,191,36,0.11);
+        }
+        .finish-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.28rem 0.62rem;
+            border-radius: 999px;
+            background: rgba(0,240,255,0.10);
+            border: 1px solid rgba(0,240,255,0.22);
+            color: var(--accent-neon);
+            font-size: 0.75rem;
+            font-weight: 900;
+        }
+        .finish-title {
+            margin-top: 0.7rem;
+            font-family: var(--font-title);
+            font-size: clamp(1.15rem, 2.4vw, 1.65rem);
+            font-weight: 900;
+            color: #fff;
+        }
+        .finish-copy {
+            max-width: 560px;
+            margin: 0.55rem auto 0;
+            color: rgba(226,232,240,0.74);
+            line-height: 1.6;
+            font-size: 0.88rem;
+        }
+        .finish-alert {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 0.56rem 0.8rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+        .finish-alert.good {
+            color: var(--accent-neon);
+            background: rgba(0,240,255,0.08);
+            border: 1px solid rgba(0,240,255,0.18);
+        }
+        .finish-alert.risk {
+            color: var(--accent-pink);
+            background: rgba(217,70,239,0.08);
+            border: 1px solid rgba(217,70,239,0.2);
+        }
+        .finish-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.85rem;
+            flex-wrap: wrap;
+            margin-top: 1.15rem;
+        }
+        .finish-action {
+            min-width: 210px;
+            min-height: 56px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.55rem;
+            border: 0;
+            border-radius: 12px;
+            padding: 0.78rem 1.05rem;
+            font-family: var(--font-title);
+            font-size: 0.96rem;
+            font-weight: 900;
+            letter-spacing: 0;
+            color: #051018;
+        }
+        .finish-action span {
+            display: block;
+            font-family: var(--font-body);
+            font-size: 0.68rem;
+            font-weight: 800;
+            opacity: 0.82;
+        }
+        .finish-action.polish {
+            background: linear-gradient(135deg, #fbbf24 0%, #fb7185 100%);
+            box-shadow: 0 0 24px rgba(251,191,36,0.22);
+        }
+        .finish-action.release,
+        .finish-action.primary {
+            background: linear-gradient(135deg, #00f0ff 0%, #d946ef 100%);
+            box-shadow: 0 0 24px rgba(0,240,255,0.24);
+        }
+        .finish-action:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.08);
+        }
+
+        /* 创始人背景选择 */
+        .founder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .founder-card {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 1.1rem;
+            transition: all 0.25s;
+        }
+        .founder-card:hover { border-color: var(--accent-neon); transform: translateY(-3px); }
+        .founder-card-head { font-weight: 800; font-size: 1.05rem; }
+        .founder-card-stats { display: flex; gap: 0.7rem; font-size: 0.78rem; font-weight: 700; }
+        .founder-card-desc { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; flex: 1; }
+        .founder-card-btn {
+            padding: 0.55rem;
+            border-radius: 10px;
+            border: 1px solid;
+            background: transparent;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .founder-card-btn:hover { background: rgba(255,255,255,0.06); }
+
+        @media (max-width: 768px) {
+            .stage-hero {
+                text-align: left;
+            }
+            .stage-hero-perks { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .dev-header {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .dev-game-meta {
+                justify-content: center;
+            }
+            .board-project-cover {
+                width: 120px;
+                justify-self: center;
+            }
+            .board-project-cover .project-cover {
+                min-height: 78px;
+            }
+            .history-item {
+                grid-template-columns: 1fr;
+                align-items: stretch;
+            }
+            .history-item .game-rating-box,
+            .history-item .history-stat-box,
+            .history-cover-slot {
+                grid-column: 1;
+                grid-row: auto;
+            }
+            .candidate-detail-lines {
+                grid-template-columns: 1fr;
+            }
+            .candidate-detail-actions,
+            .candidate-actions {
+                grid-template-columns: 1fr;
+            }
+            .board-stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .board-stats-row .points-counter:last-child { grid-column: 1 / -1; }
+            .dev-progress-shell { grid-template-columns: 1fr; }
+            .dev-phase-label { justify-self: center; }
+            .dev-board-cards { grid-template-columns: 1fr; }
+            .finish-action { width: 100%; min-width: 0; }
+            .advance-control { align-items: flex-start; margin-left: 0; }
+        }
+

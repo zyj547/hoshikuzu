@@ -1,0 +1,376 @@
+
+        /* ==========================================================================
+           1. 设计系统与重置 (Design System & Reset)
+           ========================================================================== */
+        /* 页面专属令牌（共享令牌与 reset 见 common.css） */
+        :root {
+            --panel-bg: rgba(15, 18, 36, 0.75);
+            --card-bg: rgba(26, 31, 58, 0.55);
+            --card-border: rgba(0, 240, 255, 0.15);
+            --card-border-hover: rgba(0, 240, 255, 0.4);
+            --accent-yellow: #fbbf24;    /* 策划黄/金 */
+            --accent-purple: #7c3aed;    /* 科技/研发紫 */
+            --accent-emerald: #10b981;   /* Bug测试绿 */
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(180deg, #05080f 0%, #0c0f1d 50%, #1e1b4b 100%) fixed;
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 氛围背景 */
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: -4;
+        }
+
+        .bg-nebula {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: -3;
+            opacity: 0.15;
+            animation: nebula-float 25s ease-in-out infinite alternate;
+        }
+        .nebula-1 {
+            width: 600px; height: 600px;
+            top: -200px; left: -100px;
+            background: radial-gradient(circle, var(--accent-purple) 0%, transparent 70%);
+        }
+        .nebula-2 {
+            width: 500px; height: 500px;
+            bottom: -150px; right: -100px;
+            background: radial-gradient(circle, var(--accent-neon) 0%, transparent 70%);
+        }
+
+        @keyframes nebula-float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 40px) scale(1.15); }
+        }
+
+        /* ==========================================================================
+           2. 主面板布局 (Dashboard Layout)
+           ========================================================================== */
+        .dashboard-container {
+            width: 100%;
+            max-width: 1360px;
+            height: 90vh;
+            min-height: 680px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            margin: 20px;
+        }
+        .dashboard-container::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.55;
+            background:
+                linear-gradient(120deg, transparent 0 46%, var(--stage-panel, rgba(0,240,255,0.035)) 46% 48%, transparent 48% 100%),
+                radial-gradient(circle at 82% 12%, var(--stage-glow, rgba(0,240,255,0.16)), transparent 28%);
+            mix-blend-mode: screen;
+            z-index: 0;
+        }
+        .dashboard-container > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 头部状态条 (Top Info Bar) */
+        .top-bar {
+            min-height: 80px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            align-items: center;
+            gap: 1.1rem;
+            padding: 0.75rem 1.5rem;
+            background: rgba(11, 13, 28, 0.5);
+        }
+
+        .studio-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            cursor: pointer;
+            min-width: 0;
+        }
+        .brand-icon {
+            font-size: 1.5rem;
+            color: var(--accent-neon);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+            animation: spin-slow 10s linear infinite;
+        }
+        .brand-name {
+            font-family: var(--font-title);
+            font-size: 1.25rem;
+            font-weight: 900;
+            letter-spacing: 0;
+            background: linear-gradient(90deg, #ffffff 0%, var(--accent-neon) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: nowrap;
+        }
+        .top-stage-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            margin-left: 0.2rem;
+            padding: 0.22rem 0.55rem;
+            border-radius: 999px;
+            border: 1px solid currentColor;
+            background: rgba(255,255,255,0.045);
+            font-size: 0.68rem;
+            font-weight: 900;
+            white-space: nowrap;
+            box-shadow: 0 0 12px var(--stage-glow, rgba(0,240,255,0.16));
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, max-content) minmax(360px, 1fr);
+            gap: clamp(0.9rem, 2vw, 2rem);
+            align-items: center;
+            justify-content: end;
+            min-width: 0;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            min-width: 0;
+        }
+        .stat-icon {
+            font-size: 1.15rem;
+        }
+        .stat-icon.money { color: var(--accent-neon); }
+        .stat-icon.fans { color: var(--accent-pink); }
+        .stat-icon.tech { color: var(--accent-purple); }
+        .stat-icon.date { color: var(--accent-yellow); }
+
+        .stat-details {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .stat-val {
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .speed-control {
+            display: flex;
+            gap: 0.35rem;
+            margin-left: 0.5rem;
+            padding-left: 1rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .speed-btn {
+            padding: 0.35rem 0.65rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-secondary);
+            font-family: var(--font-title);
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            white-space: nowrap;
+        }
+        .speed-btn:hover {
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .speed-btn.active {
+            color: var(--accent-neon);
+            border-color: var(--accent-neon);
+            background: rgba(0, 240, 255, 0.08);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+        }
+
+        /* 核心内容区 */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 左侧边导航栏 (Sidebar Navigation) */
+        .sidebar {
+            width: 220px;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(8, 10, 22, 0.4);
+            padding: 1.5rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            list-style: none;
+        }
+
+        .nav-item button {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            border-radius: 12px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item button i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .nav-item button:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item button:hover i {
+            transform: scale(1.15);
+        }
+
+        .nav-item.active button {
+            color: var(--accent-neon);
+            background: rgba(0, 240, 255, 0.05);
+            border-color: rgba(0, 240, 255, 0.15);
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+
+        .nav-footer-btn {
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            background: rgba(217, 70, 239, 0.05);
+            border: 1px solid rgba(217, 70, 239, 0.15);
+            color: var(--accent-pink);
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-footer-btn:hover {
+            background: rgba(217, 70, 239, 0.15);
+            box-shadow: 0 0 15px rgba(217, 70, 239, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* 主视口区域 */
+        .content-viewport {
+            flex: 1;
+            padding: 2rem 2rem 2rem 1.75rem;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            min-width: 0;
+        }
+        .content-viewport::before {
+            content: var(--stage-watermark, "INDIE");
+            position: fixed;
+            right: max(2rem, calc((100vw - 1360px) / 2 + 2rem));
+            bottom: 1.3rem;
+            color: rgba(255,255,255,0.024);
+            font-family: var(--font-title);
+            font-size: clamp(4rem, 11vw, 9rem);
+            font-weight: 900;
+            letter-spacing: 0;
+            line-height: 1;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .content-viewport > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 隐藏所有的视口页面 */
+        .screen-panel {
+            display: none;
+            height: 100%;
+            animation: fade-in 0.4s ease;
+        }
+
+        .screen-panel.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 通用标题设计 */
+        .panel-header {
+            margin-bottom: 1.5rem;
+        }
+        .panel-title {
+            font-family: var(--font-title);
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .panel-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+

@@ -1,5 +1,5 @@
 // ==========================================================================
-// 员工核心工具：状态字段、记忆、档案、小传、留任/续约记忆回响
+// Employee core tools: vitals, memory, profile, retention and renewal helpers.
 // ==========================================================================
 (function (root, factory) {
     const api = factory(root);
@@ -83,7 +83,7 @@
     function employeeMemoryHtml(emp) {
         ensureEmployeeVitals(emp);
         const safe = typeof escapeHtml === "function" ? escapeHtml : (s) => String(s == null ? "" : s);
-        if (!emp.memories.length) return `<div class="memory-empty">还没有共同记忆。重要选择、特质事件和离职都会记录在这里。</div>`;
+        if (!emp.memories.length) return `<div class="memory-empty">还没有共同记忆。重要选择、特质事件、作品发行和离职都会记录在这里。</div>`;
         return emp.memories.slice().reverse().map(m => `
             <div class="memory-line">
                 <span>${safe(m.date || "某一周")}</span>
@@ -96,12 +96,12 @@
         ensureEmployeeVitals(emp);
         const memories = emp.memories || [];
         const bestMemory = memories.length ? memories[memories.length - 1].text : "还在等待属于自己的高光时刻。";
-        return `【${emp.name}】${roleName(emp.role)} Lv.${emp.level || 1}
+        return `《${emp.name}》${roleName(emp.role)} Lv.${emp.level || 1}
 特质：${traitName(emp)} / 性格：${archetypeName(emp)}
 能力：代码 ${emp.stats?.code || 0} · 美术 ${emp.stats?.art || 0} · 策划 ${emp.stats?.design || 0}
 当前状态：${emp.statusText || "整理任务"}（情绪 ${Math.round(emp.satisfaction)}，忠诚 ${Math.round(emp.loyalty)}）
 共同记忆：${bestMemory}
-—— 来自《${gameState?.companyName || "桔子工作室"}》员工小传`;
+-- 来自《${gameState?.companyName || "桔子工作室"}》员工小传`;
     }
 
     function copyEmployeeBio(idx) {
@@ -120,21 +120,26 @@
         if (!emp) return;
         ensureEmployeeVitals(emp);
         const safe = typeof escapeHtml === "function" ? escapeHtml : (s) => String(s == null ? "" : s);
-        const contract = typeof contractLabel === "function" ? contractLabel(emp) : "合约信息暂无";
+        const contract = typeof contractLabel === "function" ? contractLabel(emp) : "合同信息暂无";
         const isFounder = emp.id === "player";
+        const morale = emp.morale == null ? 75 : emp.morale;
+        const fatigue = emp.fatigue || 0;
+        const efficiency = typeof employeeEfficiency === "function" ? Math.round(employeeEfficiency(emp) * 100) : 100;
         const body = `
             <div class="employee-profile-modal">
                 <div class="employee-profile-hero">
                     <div>
                         <b>${safe(emp.name)}</b>
-                        <span>${roleName(emp.role)} · Lv.${emp.level || 1}</span>
+                        <span>${roleName(emp.role)} · Lv.${emp.level || 1} · ${isFounder ? "创始人" : contract}</span>
                     </div>
-                    <button class="btn-research staff-action-btn memory" onclick="copyEmployeeBio(${idx})">复制小传</button>
+                    <button type="button" class="btn-research staff-action-btn memory" onclick="copyEmployeeBio(${idx})">复制小传</button>
                 </div>
                 <div class="employee-memory-head">
+                    <span>心情 ${Math.round(morale)}</span>
                     <span>情绪 ${Math.round(emp.satisfaction)}</span>
                     <span>忠诚 ${Math.round(emp.loyalty)}</span>
-                    <span>${safe(emp.statusText || "整理任务")}</span>
+                    <span>疲劳 ${Math.round(fatigue)}</span>
+                    <span>效率 ${efficiency}%</span>
                 </div>
                 <div class="employee-profile-grid">
                     <div><span>代码</span><b>${emp.stats?.code || 0}</b></div>
@@ -142,19 +147,20 @@
                     <div><span>策划</span><b>${emp.stats?.design || 0}</b></div>
                     <div><span>特质</span><b>${traitName(emp)}</b></div>
                     <div><span>性格</span><b>${archetypeName(emp)}</b></div>
-                    <div><span>合同</span><b>${isFounder ? "创始人" : contract}</b></div>
+                    <div><span>状态</span><b>${safe(emp.statusText || "整理任务")}</b></div>
                 </div>
+                <div class="employee-detail-section-title">共同记忆</div>
                 <div class="employee-memory-list">${employeeMemoryHtml(emp)}</div>
             </div>
         `;
-        if (typeof alert === "function") alert(body, `${emp.name} · 员工档案`);
+        if (typeof alert === "function") alert(body, `${emp.name} · 员工详情`);
     }
 
     function employeeFarewellText(emp, reason = "leave") {
         ensureEmployeeVitals(emp);
         const memories = Array.isArray(emp.memories) ? emp.memories : [];
         const lastMemory = memories.length ? `他最后提到：“${memories[memories.length - 1].text}”` : "";
-        if (emp.loyalty >= 78) return `他留下了一张纸条：谢谢你认真把我当成团队的一员。${lastMemory}`;
+        if (emp.loyalty >= 78) return `他留下一张纸条：谢谢你认真把我当成团队的一员。${lastMemory}`;
         if (emp.loyalty <= 35) return emp.archetype === "slash" ? "桌上只剩一张便签：有缘江湖再见。" : "他收拾得很快，几乎没有回头。";
         if (reason === "fire") return `他点点头，带走了自己的杯子。${lastMemory}`;
         return `他认真道别，把手头资料整理得很清楚。${lastMemory}`;
@@ -164,24 +170,24 @@
         ensureEmployeeVitals(emp);
         let multiplier = emp.loyalty >= 82 ? 0.45 : emp.loyalty >= 68 ? 0.7 : emp.loyalty <= 30 ? 1.55 : emp.loyalty <= 45 ? 1.25 : 1;
         const memoryText = (emp.memories || []).map(m => m.text || "").join(" ");
-        if (memoryText.includes("加薪") && memoryText.includes("压在桌角")) multiplier *= 1.18;
-        if (memoryText.includes("挽留") || memoryText.includes("认真对待") || memoryText.includes("独立试手")) multiplier *= 0.88;
+        if (/升职|神作|爆款|共同|感谢/.test(memoryText)) multiplier *= 0.85;
+        if (/离职|争吵|疲惫|被忽视/.test(memoryText)) multiplier *= 1.18;
         return multiplier;
     }
 
     function employeeRenewalRaiseModifier(emp) {
         ensureEmployeeVitals(emp);
-        const memoryText = (emp.memories || []).map(m => m.text || "").join(" ");
         let modifier = 0;
-        if (memoryText.includes("带薪休整") || memoryText.includes("独立试手") || memoryText.includes("认真对待")) modifier -= 0.03;
-        if (memoryText.includes("压在桌角") || memoryText.includes("被暂缓")) modifier += 0.03;
-        if (emp.loyalty >= 82) modifier -= 0.04;
-        if (emp.loyalty <= 38) modifier += 0.05;
+        if (emp.loyalty >= 80) modifier -= 0.08;
+        if (emp.loyalty <= 38) modifier += 0.14;
+        if ((emp.memories || []).some(m => /爆款|神作|共同/.test(m.text || ""))) modifier -= 0.04;
+        if ((emp.memories || []).some(m => /离职|疲惫|争吵/.test(m.text || ""))) modifier += 0.06;
         return modifier;
     }
 
     return {
         employeeClamp,
+        nowDateText,
         ensureEmployeeVitals,
         ensureEmployeeEcosystem,
         addEmployeeMemory,

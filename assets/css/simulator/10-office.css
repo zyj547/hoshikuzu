@@ -1,0 +1,835 @@
+        /* ==========================================================================
+           3. 模块页面细节 (Module Screens)
+           ========================================================================== */
+        
+        /* ── 3.1 办公室总览 (Office Panel) ── */
+        .office-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(240px, 280px);
+            gap: 1.25rem;
+            flex: 1;
+            align-items: start;
+            min-width: 0;
+        }
+        .stage-hero {
+            --stage-color: var(--accent-neon);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            padding: 1rem;
+            border-radius: 18px;
+            border: 1px solid color-mix(in srgb, var(--stage-color), transparent 48%);
+            background:
+                linear-gradient(135deg, color-mix(in srgb, var(--stage-color), transparent 84%), rgba(255,255,255,0.035)),
+                rgba(10, 14, 30, 0.68);
+            box-shadow: 0 18px 40px rgba(0,0,0,0.28), 0 0 28px color-mix(in srgb, var(--stage-color), transparent 78%);
+            overflow: hidden;
+            min-width: 0;
+        }
+        .stage-hero-main {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 0.75rem;
+            align-items: center;
+            min-width: 0;
+        }
+        .stage-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--stage-color), transparent 78%), transparent);
+            transform: translateX(-120%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .stage-hero.upgraded::before { animation: stageHeroSweep 1.35s ease-out; }
+        @keyframes stageHeroSweep {
+            0% { transform: translateX(-120%); opacity: 0; }
+            35% { opacity: 1; }
+            100% { transform: translateX(120%); opacity: 0; }
+        }
+        .stage-hero-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            background: rgba(255,255,255,0.055);
+            border: 1px solid color-mix(in srgb, var(--stage-color), transparent 52%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 0 20px color-mix(in srgb, var(--stage-color), transparent 76%);
+        }
+        .stage-hero-kicker {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            font-weight: 800;
+            margin-bottom: 0.15rem;
+        }
+        .stage-hero-name {
+            font-family: var(--font-title);
+            font-size: 1.05rem;
+            font-weight: 900;
+            line-height: 1.2;
+        }
+        .stage-hero-desc {
+            margin: 0.2rem 0 0;
+            color: rgba(226,232,240,0.72);
+            font-size: 0.76rem;
+            line-height: 1.45;
+        }
+        .stage-hero-perks {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+        .stage-hero-perks span {
+            padding: 0.38rem 0.35rem;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.22);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 900;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        /* 员工开发卡座 */
+        .desks-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            min-width: 0;
+            max-width: 100%;
+            overflow: visible;
+            position: relative;
+            z-index: 2;
+        }
+
+        .desk-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 0.95rem 1rem;
+            display: grid;
+            grid-template-columns: minmax(190px, 1.18fr) minmax(104px, 0.5fr) minmax(126px, 0.56fr) 148px;
+            grid-template-areas: "profile skills condition actions";
+            align-items: center;
+            column-gap: 0.65rem;
+            row-gap: 0.9rem;
+            position: relative;
+            z-index: 2;
+            overflow: visible;
+            transition: all 0.3s;
+            min-height: 126px;
+            min-width: 0;
+        }
+        .employee-card {
+            cursor: pointer;
+        }
+        .founder-desk-card {
+            border-color: rgba(251, 191, 36, 0.56);
+            background:
+                linear-gradient(135deg, rgba(251,191,36,0.105), rgba(0,240,255,0.035) 42%, rgba(255,255,255,0.025)),
+                var(--card-bg);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 24px rgba(251,191,36,0.14);
+        }
+        .founder-desk-card::after {
+            content: "FOUNDER";
+            position: absolute;
+            right: 1rem;
+            bottom: 0.65rem;
+            font-family: var(--font-title);
+            font-size: 0.72rem;
+            font-weight: 900;
+            color: rgba(251,191,36,0.14);
+            letter-spacing: 0.08em;
+            pointer-events: none;
+        }
+        .employee-card > * {
+            position: relative;
+            z-index: 3;
+        }
+        .desk-card:hover {
+            border-color: var(--card-border-hover);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.08);
+        }
+
+        .staff-avatar-box {
+            grid-area: profile;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            min-width: 0;
+            cursor: pointer;
+        }
+        .staff-avatar {
+            width: 50px; height: 50px;
+            flex: 0 0 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--accent-neon);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+        }
+        .staff-avatar.programmer { border-color: var(--accent-neon); color: var(--accent-neon); }
+        .staff-avatar.artist { border-color: var(--accent-pink); color: var(--accent-pink); }
+        .staff-avatar.designer { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+
+        .staff-role-badge {
+            position: absolute;
+            bottom: -5px; right: -5px;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            border: 1px solid currentColor;
+        }
+
+        .staff-profile {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            max-width: 100%;
+        }
+        .staff-name-row {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
+        .staff-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+            max-width: min(205px, 100%);
+            overflow: visible;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .specialty-tag {
+            flex: 0 1 auto;
+            max-width: 132px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: inline-block;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            border: 1px solid currentColor;
+            font-size: 0.7rem;
+            font-weight: 800;
+        }
+        .desk-rarity-badge {
+            flex: 0 0 auto;
+            border: 1px solid currentColor;
+            border-radius: 999px;
+            padding: 0.08rem 0.38rem;
+            font-family: var(--font-title);
+            font-size: 0.65rem;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            background: rgba(0,0,0,0.25);
+            text-shadow: 0 0 6px currentColor;
+        }
+        .staff-level {
+            font-family: var(--font-title);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .staff-skills {
+            grid-area: skills;
+            display: flex;
+            justify-content: center;
+            gap: 0.65rem;
+            min-width: 0;
+        }
+        .skill-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 36px;
+        }
+        .skill-val {
+            font-family: var(--font-title);
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        .skill-val.code { color: var(--accent-neon); }
+        .skill-val.art { color: var(--accent-pink); }
+        .skill-val.design { color: var(--accent-yellow); }
+        .skill-lbl {
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+
+        .staff-condition {
+            grid-area: condition;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            justify-content: center;
+            min-width: 0;
+        }
+        .condition-pill {
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 999px;
+            padding: 0.16rem 0.36rem;
+            font-size: 0.66rem;
+            font-weight: 700;
+            background: rgba(0,0,0,0.2);
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        .condition-pill.good { color: var(--accent-neon); border-color: rgba(0,240,255,0.25); }
+        .condition-pill.warn { color: var(--accent-yellow); border-color: rgba(251,191,36,0.25); }
+        .condition-pill.risk { color: var(--accent-pink); border-color: rgba(217,70,239,0.25); }
+
+        .staff-actions {
+            grid-area: actions;
+            width: 100%;
+            min-width: 132px;
+            justify-self: stretch;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0.38rem;
+            position: relative;
+            z-index: 3;
+        }
+        .staff-action-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.45rem;
+            width: 100%;
+        }
+        .staff-action-row.triple {
+            grid-template-columns: 1fr 0.85fr 0.85fr;
+        }
+        .staff-action-row.quad {
+            grid-template-columns: 1fr 1fr;
+        }
+        .staff-action-row.compact {
+            grid-template-columns: 1fr 1fr;
+            grid-auto-rows: minmax(34px, auto);
+        }
+        .staff-action-row.solo {
+            display: block;
+            margin-top: 0.45rem;
+        }
+        .staff-action-btn,
+        .staff-empty-action {
+            position: relative;
+            z-index: 4;
+            width: 100%;
+            min-width: 0;
+            padding-left: 0.22rem;
+            padding-right: 0.22rem;
+            white-space: normal;
+            line-height: 1.2;
+            min-height: 34px;
+            overflow-wrap: anywhere;
+            font-size: 0.68rem;
+            text-align: center;
+        }
+        .staff-action-btn {
+            white-space: nowrap;
+            overflow-wrap: normal;
+            word-break: keep-all;
+        }
+        .staff-action-btn.detail {
+            border-color: rgba(148, 163, 184, 0.34);
+            color: #e2e8f0;
+            background: rgba(255,255,255,0.045);
+            min-height: 32px;
+            font-size: 0.7rem;
+        }
+        .staff-action-btn.detail i {
+            margin-right: 0.28rem;
+        }
+        .staff-action-btn.train { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+        .staff-action-btn.rest { border-color: var(--accent-neon); color: var(--accent-neon); }
+        .staff-action-btn.fire {
+            border-color: rgba(248, 113, 113, 0.75);
+            color: #f87171;
+        }
+        .staff-action-btn.memory {
+            border-color: rgba(148, 163, 184, 0.28);
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.03);
+        }
+        .staff-action-btn.memory:hover {
+            border-color: rgba(0, 240, 255, 0.42);
+            color: var(--accent-neon);
+        }
+        .staff-action-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(0.3);
+        }
+        .staff-action-btn.specialize {
+            border-color: var(--accent-pink);
+            color: var(--accent-pink);
+            box-shadow: 0 0 8px rgba(217, 70, 239, 0.16);
+        }
+        .staff-action-btn.founder-lock {
+            border-color: rgba(251,191,36,0.18);
+            color: rgba(251,191,36,0.62);
+            background: rgba(251,191,36,0.045);
+            cursor: default;
+        }
+        .staff-action-btn.founder-lock i {
+            margin-right: 0.25rem;
+        }
+
+        .office-expand-card {
+            grid-template-columns: minmax(160px, 1.4fr) minmax(110px, 0.7fr) minmax(90px, 0.55fr) minmax(140px, 160px);
+            border-style: dashed;
+            border-color: rgba(251, 191, 36, 0.42);
+            background: rgba(251, 191, 36, 0.045);
+        }
+        .empty-desk-card {
+            grid-template-columns: minmax(160px, 1fr) minmax(140px, 160px);
+            grid-template-areas: "profile actions";
+            min-height: 96px;
+            opacity: 0.82;
+        }
+        .empty-desk-main {
+            opacity: 0.48;
+        }
+        .empty-avatar {
+            border-color: rgba(255,255,255,0.1);
+            color: var(--text-secondary);
+        }
+        .employee-memory-modal,
+        .employee-profile-modal {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            text-align: left;
+        }
+        .employee-detail-overlay {
+            z-index: 12000;
+        }
+        .employee-detail-card {
+            width: min(760px, calc(100vw - 2rem));
+            max-width: 760px;
+            max-height: min(82vh, 720px);
+            overflow-y: auto;
+            border-color: rgba(0, 240, 255, 0.34);
+            box-shadow: 0 28px 70px rgba(0,0,0,0.72), 0 0 34px rgba(0,240,255,0.18);
+            position: relative;
+        }
+        .employee-detail-close {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(0,0,0,0.24);
+            color: var(--text-secondary);
+            cursor: pointer;
+            z-index: 2;
+        }
+        .employee-detail-close:hover {
+            color: #fff;
+            border-color: rgba(0,240,255,0.38);
+            background: rgba(0,240,255,0.08);
+        }
+        .employee-profile-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 240, 255, 0.14);
+            background: linear-gradient(135deg, rgba(0,240,255,0.08), rgba(124,58,237,0.08));
+        }
+        .employee-profile-hero > div {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        .employee-profile-hero b {
+            color: #fff;
+            font-size: 1.05rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .employee-profile-hero span {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+        }
+        .employee-memory-head {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0.5rem;
+        }
+        .employee-memory-head span {
+            min-width: 0;
+            padding: 0.55rem 0.65rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04);
+            color: var(--text-primary);
+            font-size: 0.78rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .employee-profile-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.55rem;
+        }
+        .employee-profile-grid div {
+            min-width: 0;
+            padding: 0.65rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(0,0,0,0.18);
+        }
+        .employee-profile-grid span {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: var(--text-secondary);
+            font-size: 0.68rem;
+            font-weight: 800;
+        }
+        .employee-profile-grid b {
+            display: block;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .employee-detail-section-title {
+            margin: 0.8rem 0 0.45rem;
+            color: var(--accent-neon);
+            font-family: var(--font-title);
+            font-size: 0.85rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 0.38rem;
+        }
+        .employee-detail-section-title::before {
+            content: "";
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent-neon);
+            box-shadow: 0 0 10px rgba(0,240,255,0.75);
+        }
+        .employee-memory-list {
+            max-height: 320px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+            padding-right: 0.25rem;
+        }
+        .memory-line {
+            padding: 0.7rem 0.8rem;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 240, 255, 0.12);
+            background: rgba(0, 240, 255, 0.045);
+        }
+        .memory-line span {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: var(--accent-neon);
+            font-size: 0.76rem;
+            font-weight: 800;
+        }
+        .memory-line p {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 0.86rem;
+            line-height: 1.55;
+        }
+        .memory-empty {
+            padding: 1rem;
+            border: 1px dashed rgba(255,255,255,0.15);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-align: center;
+            font-size: 0.86rem;
+        }
+        .muted-name {
+            color: var(--text-secondary);
+        }
+        .empty-desk-action {
+            justify-self: end;
+        }
+        .expand-avatar,
+        .expand-cost {
+            border-color: var(--accent-yellow);
+            color: var(--accent-yellow);
+        }
+        .office-expand-card .desk-status-text:not(.expand-cost) {
+            grid-area: skills;
+        }
+        .office-expand-card .expand-cost {
+            grid-area: condition;
+        }
+
+        .desk-status-text {
+            min-width: 0;
+            font-size: 0.85rem;
+            color: var(--accent-neon);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .desk-status-text.idle { color: var(--text-secondary); }
+
+        /* 办公室右侧状态 */
+        .office-aside {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            min-width: 0;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .glass-box {
+            background: rgba(15, 18, 36, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 1.25rem;
+            min-width: 0;
+        }
+
+        .office-theater-box {
+            padding-bottom: 1rem;
+            border-color: rgba(0, 240, 255, 0.12);
+            background: linear-gradient(180deg, rgba(0, 240, 255, 0.045), rgba(15, 18, 36, 0.42));
+        }
+
+        .office-theater-title {
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .office-theater-title span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 0;
+        }
+
+        .office-theater-share {
+            flex: 0 0 auto;
+            min-height: 26px;
+            padding: 0.2rem 0.55rem;
+            border-radius: 999px;
+            border: 1px solid rgba(0, 240, 255, 0.28);
+            background: rgba(0, 240, 255, 0.07);
+            color: var(--accent-neon);
+            font-size: 0.68rem;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .office-theater-share:hover {
+            background: var(--accent-neon);
+            color: #061018;
+            box-shadow: 0 0 14px rgba(0, 240, 255, 0.22);
+        }
+
+        .office-theater-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .office-theater-row {
+            display: grid;
+            grid-template-columns: 34px minmax(0, 1fr);
+            gap: 0.65rem;
+            align-items: flex-start;
+            padding: 0.65rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(0,0,0,0.18);
+            cursor: pointer;
+            transition: transform 0.18s, border-color 0.18s, background 0.18s;
+        }
+
+        .office-theater-row:hover {
+            transform: translateY(-1px);
+            border-color: rgba(0, 240, 255, 0.28);
+            background: rgba(0, 240, 255, 0.065);
+        }
+
+        .office-theater-row.good { border-color: rgba(0,240,255,0.15); }
+        .office-theater-row.warn { border-color: rgba(251,191,36,0.18); }
+        .office-theater-row.risk { border-color: rgba(251,113,133,0.22); }
+        .office-theater-row.debug { border-color: rgba(56,189,248,0.2); }
+        .office-theater-row.idea { border-color: rgba(124,58,237,0.24); }
+
+        .office-theater-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-neon);
+            background: rgba(0, 240, 255, 0.08);
+            border: 1px solid rgba(0, 240, 255, 0.18);
+        }
+
+        .office-theater-copy {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.22rem;
+        }
+
+        .office-theater-name {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.45rem;
+            min-width: 0;
+            color: #fff;
+            font-size: 0.82rem;
+            font-weight: 900;
+        }
+
+        .office-theater-name span {
+            min-width: 0;
+            color: var(--text-secondary);
+            font-size: 0.68rem;
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .office-theater-copy p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.76rem;
+            line-height: 1.45;
+        }
+
+        .office-theater-empty {
+            padding: 0.8rem;
+            border-radius: 10px;
+            border: 1px dashed rgba(255,255,255,0.14);
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-align: center;
+        }
+
+        .aside-title {
+            font-family: var(--font-title);
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            color: var(--accent-yellow);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: 0.85rem;
+            gap: 0.85rem;
+            min-width: 0;
+        }
+        .list-lbl {
+            color: var(--text-secondary);
+            flex-shrink: 0;
+            white-space: nowrap;
+            line-height: 1.35;
+        }
+        .list-val {
+            font-weight: 600;
+            text-align: right;
+            min-width: 0;
+            line-height: 1.35;
+            overflow-wrap: anywhere;
+        }
+        .list-val.accent { color: var(--accent-neon); }
+        /* 晋级进度等长文本行：标签在上、数值整行换行显示 */
+        .list-item.stacked {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 0.25rem;
+        }
+        .list-item.stacked .list-val {
+            text-align: left;
+        }
+        .weekly-bill-details {
+            display: none;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 0.65rem;
+            margin-bottom: 0.5rem;
+            flex-direction: column;
+            gap: 0.45rem;
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+            text-align: left;
+            transition: all 0.2s;
+            min-width: 0;
+        }
+        .bill-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 0;
+        }
+        .bill-row span:first-child {
+            min-width: 0;
+            line-height: 1.35;
+        }
+        .bill-row span:last-child {
+            flex: 0 0 auto;
+            text-align: right;
+        }
+

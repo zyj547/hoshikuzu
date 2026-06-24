@@ -96,23 +96,22 @@ async function confirmTrain(i) {
     if (emp.trait === "lazy") cost = Math.round(cost / 2);
     const msg = `
         <div style="text-align:left; line-height:1.7;">
-            <div style="font-weight:700; color:#fff; margin-bottom:0.4rem;">🎓 培训【${escapeHtml(emp.name)}】</div>
+            <div style="font-weight:700; color:#fff; margin-bottom:0.4rem;">培训《${escapeHtml(emp.name)}》</div>
             <div>费用：<b style="color:var(--accent-pink);">¥${cost.toLocaleString()}</b></div>
-            <div>效果：等级 +1，对应专业属性显著成长，月薪上调约 25%。</div>
-            ${emp.trait === "lazy" ? `<div style="color:var(--accent-yellow);">（摸鱼达人：培训费减半，但属性成长更随机）</div>` : ""}
+            <div>效果：等级 +1，对应专业属性成长，月薪上调约 25%。</div>
+            ${emp.trait === "lazy" ? `<div style="color:var(--accent-yellow);">摸鱼达人：培训费减半，但属性成长更随机。</div>` : ""}
             <div style="margin-top:0.45rem; opacity:0.85;">确定为其安排培训吗？</div>
         </div>`;
     if (await confirm(msg, "员工培训")) trainEmployee(i);
 }
 
-// 休整前的详细说明确认弹窗（确认后才执行 restEmployee）
 async function confirmRest(i) {
     const emp = gameState.employees[i];
     if (!emp) return;
     const cost = Math.max(800, Math.round(emp.salary * 0.6));
     const msg = `
         <div style="text-align:left; line-height:1.7;">
-            <div style="font-weight:700; color:#fff; margin-bottom:0.4rem;">☕ 带薪休整【${escapeHtml(emp.name)}】</div>
+            <div style="font-weight:700; color:#fff; margin-bottom:0.4rem;">带薪休整《${escapeHtml(emp.name)}》</div>
             <div>费用：<b style="color:var(--accent-pink);">¥${cost.toLocaleString()}</b></div>
             <div>效果：疲劳 -35，心情 +18。</div>
             <div style="margin-top:0.45rem; opacity:0.85;">确定安排休整吗？</div>
@@ -120,9 +119,9 @@ async function confirmRest(i) {
     if (await confirm(msg, "带薪休整")) restEmployee(i);
 }
 
-// 渲染办公室列表
 function loadOfficeDesks() {
     const container = document.getElementById("office-desks");
+    if (!container) return;
     container.innerHTML = "";
 
     const specialtyNames = {
@@ -136,7 +135,6 @@ function loadOfficeDesks() {
 
     const officeSlots = gameState.officeSlots || 3;
 
-    // 循环遍历渲染当前办公室卡座
     for (let i = 0; i < officeSlots; i++) {
         const emp = gameState.employees[i];
         const card = document.createElement("div");
@@ -145,19 +143,18 @@ function loadOfficeDesks() {
         if (emp) {
             if (typeof ensureEmployeeVitals === "function") ensureEmployeeVitals(emp);
             let iconClass = "fa-laptop-code";
-            let roleName = "程序员";
-            if (emp.role === "artist") { roleName = "美术设计师"; iconClass = "fa-palette"; }
-            if (emp.role === "designer") { roleName = "核心策划"; iconClass = "fa-lightbulb"; }
+            const roleNameText = typeof roleName === "function" ? roleName(emp.role) : "程序员";
+            if (emp.role === "artist") iconClass = "fa-palette";
+            if (emp.role === "designer") iconClass = "fa-lightbulb";
 
-            // 专精状态展示标签
             let specialtyTagHtml = "";
             if (emp.specialty) {
                 let tagColor = "var(--accent-neon)";
                 if (emp.role === "artist") tagColor = "var(--accent-pink)";
                 if (emp.role === "designer") tagColor = "var(--accent-yellow)";
-                specialtyTagHtml = `<span class="specialty-tag" style="border-color:${tagColor}; color:${tagColor}; text-shadow:0 0 5px ${tagColor};">${specialtyNames[emp.specialty]}</span>`;
+                specialtyTagHtml = `<span class="specialty-tag" style="border-color:${tagColor}; color:${tagColor}; text-shadow:0 0 5px ${tagColor};">${specialtyNames[emp.specialty] || emp.specialty}</span>`;
             }
-            // 品质徽章：创始人显示成长称号，其余员工显示抽卡稀有度
+
             let rarityBadgeHtml;
             if (i === 0 || emp.id === "player") {
                 const ft = founderTitle();
@@ -166,46 +163,19 @@ function loadOfficeDesks() {
                 const empRarity = HIRING_RARITIES[emp.rarity || "R"];
                 rarityBadgeHtml = `<span class="desk-rarity-badge" style="color:${empRarity.color}; border-color:${empRarity.color};">${empRarity.name}</span>`;
             }
+
             const morale = emp.morale == null ? 75 : emp.morale;
             const fatigue = emp.fatigue || 0;
             const satisfaction = emp.satisfaction == null ? morale : emp.satisfaction;
             const loyalty = emp.loyalty == null ? (emp.id === "player" ? 100 : 55) : emp.loyalty;
             const efficiency = Math.round(employeeEfficiency(emp) * 100);
-            const restCost = Math.max(800, Math.round(emp.salary * 0.6));
 
-            // 是否可以专精
             const fireButtonHtml = i === 0 || emp.id === "player"
-                ? `<button class="btn-research staff-action-btn fire" disabled>创始人</button>`
-                : `<button class="btn-research staff-action-btn fire" onclick="fireEmployee(${i})">开除</button>`;
-            let actionButtonHtml = `
-                <div class="staff-action-row compact">
-                    <button class="btn-research staff-action-btn train" onclick="confirmTrain(${i})">
-                        培训
-                    </button>
-                    <button class="btn-research staff-action-btn rest" onclick="confirmRest(${i})">
-                        休整
-                    </button>
-                </div>
-                <div class="staff-action-row solo">
-                    ${fireButtonHtml}
-                </div>
-            `;
-            if (emp.level >= 5 && !emp.specialty) {
-                actionButtonHtml = `
-                    <div class="staff-action-row compact">
-                        <button class="btn-research staff-action-btn train" onclick="confirmTrain(${i})">
-                            培训
-                        </button>
-                        <button class="btn-research staff-action-btn specialize" onclick="openSpecialtyModal(${i})">
-                            专精
-                        </button>
-                        <button class="btn-research staff-action-btn rest" onclick="confirmRest(${i})">
-                            休整
-                        </button>
-                        ${fireButtonHtml}
-                    </div>
-                `;
-            }
+                ? `<button type="button" class="btn-research staff-action-btn fire" disabled>创始人</button>`
+                : `<button type="button" class="btn-research staff-action-btn fire" onclick="fireEmployee(${i})">开除</button>`;
+            const specializeButtonHtml = emp.level >= 5 && !emp.specialty
+                ? `<button type="button" class="btn-research staff-action-btn specialize" onclick="openSpecialtyModal(${i})">专精</button>`
+                : "";
 
             card.innerHTML = `
                 <div class="staff-avatar-box">
@@ -219,26 +189,16 @@ function loadOfficeDesks() {
                             ${rarityBadgeHtml}
                             ${specialtyTagHtml}
                         </div>
-                        <span class="staff-level">${roleName} | 等级 Lv.${emp.level}</span>
+                        <span class="staff-level">${roleNameText} · Lv.${emp.level}</span>
                         ${typeof employeeTagHtml === "function" ? employeeTagHtml(emp) : ""}
                     </div>
                 </div>
                 <div class="staff-skills">
-                    <div class="skill-stat">
-                        <span class="skill-val code">${emp.stats.code}</span>
-                        <span class="skill-lbl">代码</span>
-                    </div>
-                    <div class="skill-stat">
-                        <span class="skill-val art">${emp.stats.art}</span>
-                        <span class="skill-lbl">美术</span>
-                    </div>
-                    <div class="skill-stat">
-                        <span class="skill-val design">${emp.stats.design}</span>
-                        <span class="skill-lbl">设计</span>
-                    </div>
+                    <div class="skill-stat"><span class="skill-val code">${emp.stats.code}</span><span class="skill-lbl">代码</span></div>
+                    <div class="skill-stat"><span class="skill-val art">${emp.stats.art}</span><span class="skill-lbl">美术</span></div>
+                    <div class="skill-stat"><span class="skill-val design">${emp.stats.design}</span><span class="skill-lbl">策划</span></div>
                 </div>
                 <div class="staff-condition">
-                    <div class="condition-pill ${staffHealthTone(morale)}">心情 ${morale}</div>
                     <div class="condition-pill ${staffHealthTone(satisfaction)}">情绪 ${Math.round(satisfaction)}</div>
                     <div class="condition-pill ${staffHealthTone(loyalty)}">忠诚 ${Math.round(loyalty)}</div>
                     <div class="condition-pill ${staffHealthTone(fatigue, true)}">疲劳 ${fatigue}</div>
@@ -246,30 +206,26 @@ function loadOfficeDesks() {
                     <div class="condition-pill ${typeof contractTone === "function" ? contractTone(emp) : "good"}">${typeof contractLabel === "function" ? contractLabel(emp) : ""}</div>
                 </div>
                 <div class="staff-actions">
-                    <div class="staff-action-row solo">
-                        <button class="btn-research staff-action-btn memory" onclick="openEmployeeMemory(${i})">
-                            共同记忆
-                        </button>
+                    <button type="button" class="btn-research staff-action-btn detail" data-employee-detail="${i}"><i class="fa-solid fa-id-card"></i> 详情</button>
+                    <div class="staff-action-row compact">
+                        <button type="button" class="btn-research staff-action-btn train" onclick="confirmTrain(${i})">培训</button>
+                        <button type="button" class="btn-research staff-action-btn rest" onclick="confirmRest(${i})">休整</button>
+                        ${specializeButtonHtml}
+                        ${fireButtonHtml}
                     </div>
-                    ${actionButtonHtml}
                 </div>
             `;
         } else {
-            // 空卡座
             card.innerHTML = `
                 <div class="staff-avatar-box empty-desk-main">
-                    <div class="staff-avatar empty-avatar">
-                        <i class="fa-solid fa-chair"></i>
-                    </div>
+                    <div class="staff-avatar empty-avatar"><i class="fa-solid fa-chair"></i></div>
                     <div class="staff-profile">
                         <span class="staff-name muted-name">空置开发卡座</span>
                         <span class="staff-level">前往人才招募中心扩大团队</span>
                     </div>
                 </div>
                 <div class="staff-actions empty-desk-action">
-                    <button class="btn-research staff-empty-action" onclick="switchScreen('staff')">
-                        快速招募员工
-                    </button>
+                    <button type="button" class="btn-research staff-empty-action" onclick="switchScreen('staff')">快速招募员工</button>
                 </div>
             `;
         }
@@ -283,9 +239,7 @@ function loadOfficeDesks() {
         card.className = "desk-card office-expand-card";
         card.innerHTML = `
             <div class="staff-avatar-box">
-                <div class="staff-avatar expand-avatar">
-                    <i class="fa-solid fa-building-circle-arrow-right"></i>
-                </div>
+                <div class="staff-avatar expand-avatar"><i class="fa-solid fa-building-circle-arrow-right"></i></div>
                 <div class="staff-profile">
                     <span class="staff-name">扩建办公室</span>
                     <span class="staff-level">当前容量 ${gameState.employees.length}/${officeSlots}，本阶段上限 ${slotCap} 人</span>
@@ -294,9 +248,7 @@ function loadOfficeDesks() {
             <div class="desk-status-text">新增 1 个员工槽位</div>
             <div class="desk-status-text expand-cost">¥${cost.toLocaleString()}</div>
             <div class="staff-actions">
-                <button class="btn-research staff-empty-action" onclick="expandOfficeSlots()">
-                    支付扩建费用
-                </button>
+                <button type="button" class="btn-research staff-empty-action" onclick="expandOfficeSlots()">支付扩建费用</button>
             </div>
         `;
         container.appendChild(card);
@@ -304,7 +256,15 @@ function loadOfficeDesks() {
     if (typeof renderOfficeTheater === "function") renderOfficeTheater(gameState);
 }
 
-// 渲染作品陈列室
+document.addEventListener("click", (event) => {
+    const btn = event.target.closest?.("[data-employee-detail]");
+    if (!btn) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const idx = Number(btn.dataset.employeeDetail);
+    if (typeof openEmployeeMemory === "function") openEmployeeMemory(idx);
+});
+
 function loadHistoryReleases() {
     const emptyHtml = `<p style="text-align: center; color: var(--text-secondary); margin-top: 3rem;">尚未发布任何一款游戏，请前往左侧启动研发！</p>`;
     renderList(document.getElementById("history-releases"), gameState.releases, (game) => ({

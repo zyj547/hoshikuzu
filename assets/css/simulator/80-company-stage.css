@@ -1,0 +1,212 @@
+        /* 公司阶段视觉皮肤（随阶段渐变升级） */
+        body.stage-0 {
+            --stage-glow: rgba(0,240,255,0.14);
+            --stage-line: rgba(0,240,255,0.18);
+            --stage-panel: rgba(0,240,255,0.045);
+            --stage-watermark: "INDIE";
+        }
+        body.stage-1 {
+            --stage-glow: rgba(0,240,255,0.24);
+            --stage-line: rgba(0,240,255,0.34);
+            --stage-panel: rgba(0,240,255,0.075);
+            --stage-watermark: "STUDIO";
+        }
+        body.stage-2 {
+            --stage-glow: rgba(251,191,36,0.25);
+            --stage-line: rgba(251,191,36,0.38);
+            --stage-panel: rgba(251,191,36,0.075);
+            --stage-watermark: "PUBLISH";
+        }
+        body.stage-3 {
+            --stage-glow: rgba(217,70,239,0.28);
+            --stage-line: rgba(217,70,239,0.42);
+            --stage-panel: rgba(217,70,239,0.08);
+            --stage-watermark: "LEGEND";
+        }
+        body.stage-0 { background: linear-gradient(180deg, #05080f 0%, #0b1020 58%, #111827 100%) fixed; }
+        body.stage-1 { background: linear-gradient(180deg, #04111a 0%, #0b1730 55%, #10173a 100%) fixed; }
+        body.stage-2 { background: linear-gradient(180deg, #070912 0%, #171324 52%, #2b1f0b 100%) fixed; }
+        body.stage-3 { background: linear-gradient(180deg, #080611 0%, #18102e 48%, #31123a 100%) fixed; }
+        body.stage-1 .bg-nebula.nebula-1 { background: radial-gradient(circle, rgba(0,240,255,0.18), transparent 70%); }
+        body.stage-2 .bg-nebula.nebula-1 { background: radial-gradient(circle, rgba(251,191,36,0.20), transparent 70%); }
+        body.stage-2 .bg-nebula.nebula-2 { background: radial-gradient(circle, rgba(0,240,255,0.12), transparent 70%); }
+        body.stage-3 .bg-nebula.nebula-1 { background: radial-gradient(circle, rgba(217,70,239,0.24), transparent 70%); }
+        body.stage-3 .bg-nebula.nebula-2 { background: radial-gradient(circle, rgba(251,191,36,0.16), transparent 70%); }
+        body[class*="stage-"] .dashboard-container {
+            border-color: var(--stage-line);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.62), 0 0 36px var(--stage-glow);
+        }
+        body[class*="stage-"] .top-bar {
+            background:
+                linear-gradient(90deg, var(--stage-panel), rgba(11,13,28,0.55) 42%, var(--stage-panel)),
+                rgba(11, 13, 28, 0.5);
+            border-bottom-color: var(--stage-line);
+        }
+        body[class*="stage-"] .sidebar {
+            background: linear-gradient(180deg, rgba(9,12,28,0.96), var(--stage-panel));
+            border-right-color: var(--stage-line);
+        }
+        body[class*="stage-"] .glass-box,
+        body[class*="stage-"] .desk-card {
+            border-color: color-mix(in srgb, var(--stage-line), rgba(255,255,255,0.06) 45%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.035), 0 0 18px rgba(0,0,0,0.12);
+        }
+        body.stage-2 .desk-card,
+        body.stage-3 .desk-card {
+            background:
+                linear-gradient(135deg, var(--stage-panel), rgba(255,255,255,0.025)),
+                var(--card-bg);
+        }
+        body.stage-2 .panel-title,
+        body.stage-3 .panel-title {
+            text-shadow: 0 0 18px var(--stage-glow);
+        }
+        body.stage-3 .dashboard-container::before {
+            opacity: 0.82;
+            background:
+                linear-gradient(120deg, transparent 0 38%, rgba(217,70,239,0.12) 38% 39%, transparent 39% 100%),
+                linear-gradient(60deg, transparent 0 62%, rgba(251,191,36,0.08) 62% 63%, transparent 63% 100%),
+                radial-gradient(circle at 82% 12%, var(--stage-glow), transparent 32%);
+        }
+        body.stage-3 .brand-icon {
+            color: var(--accent-pink);
+            text-shadow: 0 0 16px rgba(217,70,239,0.7), 0 0 30px rgba(251,191,36,0.25);
+        }
+        .stage-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.42rem;
+            padding: 0.22rem 0.55rem;
+            border-radius: 999px;
+            border: 1px solid currentColor;
+            background: rgba(255,255,255,0.045);
+            box-shadow: 0 0 14px var(--stage-glow);
+            white-space: nowrap;
+            font-weight: 900;
+        }
+        .stage-badge i { font-size: 0.82rem; }
+        .stage-progress-line {
+            display: block;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+        .stage-progress-line.ready,
+        .stage-progress-line.max {
+            color: var(--accent-neon);
+            font-weight: 900;
+        }
+        .stage-bonus-row {
+            display: block;
+            margin-top: 0.25rem;
+            color: rgba(226,232,240,0.62);
+            font-size: 0.72rem;
+            line-height: 1.45;
+        }
+        body.stage-2 .stage-bonus-row { color: rgba(251,191,36,0.78); }
+        body.stage-3 .stage-bonus-row { color: rgba(217,70,239,0.82); }
+
+        /* ── 公司晋级按钮 ── */
+        .btn-stageup {
+            margin-top: 0.6rem;
+            width: 100%;
+            padding: 0.55rem;
+            border-radius: 10px;
+            border: 1px solid rgba(251,191,36,0.4);
+            background: linear-gradient(135deg, rgba(251,191,36,0.12), rgba(217,70,239,0.08));
+            color: var(--accent-yellow);
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-stageup:hover { background: linear-gradient(135deg, rgba(251,191,36,0.25), rgba(217,70,239,0.15)); box-shadow: 0 0 14px rgba(251,191,36,0.25); }
+
+        /* ── 晋级评估弹窗内容 ── */
+        .stageup-from-to { text-align: center; font-weight: 800; font-size: 1.05rem; margin: 0.3rem 0 0.6rem; }
+        .stageup-desc { text-align: center; font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.8rem; }
+        .stageup-perks { display: flex; justify-content: center; gap: 1rem; font-size: 0.76rem; color: var(--text-secondary); margin-bottom: 1rem; }
+        .stageup-perks b { color: #fff; }
+        .stageup-conds { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.8rem; }
+        .stageup-cond {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.55rem 0.7rem;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            font-size: 0.85rem;
+        }
+        .stageup-cond.met { border-color: rgba(0,240,255,0.3); }
+        .stageup-cond.unmet { border-color: rgba(239,68,68,0.25); }
+        .stageup-cond-label { flex: 1; color: var(--text-primary); }
+        .stageup-cond-val { font-family: var(--font-title); font-weight: 700; color: #fff; }
+        .stageup-cond.unmet .stageup-cond-val { color: var(--accent-pink); }
+
+        #stageup-confirm-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.6); }
+        #stageup-confirm-btn.ready { animation: stageup-btn-pulse 1.3s infinite; }
+        @keyframes stageup-btn-pulse {
+            0%, 100% { box-shadow: 0 0 0 rgba(0,240,255,0); }
+            50% { box-shadow: 0 0 18px rgba(0,240,255,0.5); }
+        }
+
+        /* ── 晋级成功全屏特效 ── */
+        #stageup-fx {
+            position: fixed; inset: 0;
+            z-index: 9000;
+            pointer-events: none;
+            display: none;
+            overflow: hidden;
+        }
+        #stageup-fx.active { display: block; }
+        .stageup-burst {
+            position: absolute; top: 50%; left: 50%;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(255,255,255,0.9), rgba(0,240,255,0.4) 40%, transparent 70%);
+            animation: stageup-burst 1s ease-out forwards;
+        }
+        @keyframes stageup-burst {
+            0% { width: 10px; height: 10px; opacity: 0.9; }
+            100% { width: 1400px; height: 1400px; opacity: 0; }
+        }
+        .stageup-plaque {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            text-align: center;
+            color: var(--stage-color, #fff);
+            animation: stageup-plaque 2.4s cubic-bezier(0.2, 1.2, 0.3, 1) forwards;
+            text-shadow: 0 0 30px var(--stage-color, #fff);
+        }
+        .stageup-plaque > i { font-size: 3.4rem; display: block; margin-bottom: 0.4rem; }
+        .stageup-plaque-sub { font-size: 0.85rem; letter-spacing: 4px; color: rgba(255,255,255,0.7); }
+        .stageup-plaque-name { font-family: var(--font-title); font-size: 2.2rem; font-weight: 900; margin-top: 0.2rem; }
+        @keyframes stageup-plaque {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            18% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            82% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -55%) scale(0.96); opacity: 0; }
+        }
+        .stageup-confetti {
+            position: absolute; top: -20px;
+            border-radius: 2px;
+            opacity: 0.95;
+            animation-name: stageup-confetti-fall;
+            animation-timing-function: ease-in;
+            animation-fill-mode: forwards;
+        }
+        @keyframes stageup-confetti-fall {
+            0% { top: -20px; opacity: 1; }
+            100% { top: 105vh; opacity: 0.7; }
+        }
+
+        .btn-stageup.ready {
+            border-color: var(--accent-neon);
+            color: #fff;
+            background: linear-gradient(135deg, rgba(0,240,255,0.25), rgba(217,70,239,0.18));
+            animation: stageup-btn-pulse 1.3s infinite;
+        }
+

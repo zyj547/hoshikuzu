@@ -1,0 +1,75 @@
+        /* ── 并行辅助项目 ── */
+        .btn-aux-dev {
+            background: linear-gradient(135deg, rgba(251,191,36,0.85), rgba(217,70,239,0.7)) !important;
+            margin-top: 0.7rem;
+        }
+        .aux-cap-hint { font-size: 0.76rem; color: var(--text-secondary); text-align: center; margin-top: 0.5rem; }
+        .aux-proj-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(251,191,36,0.18);
+            border-radius: 10px;
+            padding: 0.6rem 0.7rem;
+            margin-bottom: 0.55rem;
+        }
+        .aux-proj-item:last-child { margin-bottom: 0; }
+        .aux-proj-head { display: flex; justify-content: space-between; align-items: baseline; }
+        .aux-proj-name { font-weight: 700; color: #fff; font-size: 0.86rem; }
+        .aux-proj-pct { font-family: var(--font-title); font-weight: 700; color: var(--accent-yellow); font-size: 0.82rem; }
+        .aux-proj-meta { font-size: 0.72rem; color: var(--text-secondary); margin: 0.15rem 0 0.4rem; }
+        .aux-proj-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; }
+        .aux-proj-bar { height: 100%; background: linear-gradient(90deg, var(--accent-yellow), var(--accent-pink)); border-radius: 6px; transition: width 0.2s; }
+
+        /* ── 平台信誉面板 ── */
+        .prep-item { margin-bottom: 0.55rem; }
+        .prep-item:last-child { margin-bottom: 0; }
+        .prep-head { display: flex; justify-content: space-between; align-items: baseline; }
+        .prep-name { font-size: 0.82rem; color: var(--text-primary); }
+        .prep-val { font-family: var(--font-title); font-weight: 700; font-size: 0.82rem; }
+        .prep-track { height: 6px; background: rgba(255,255,255,0.06); border-radius: 6px; overflow: hidden; margin-top: 0.25rem; }
+        .prep-bar { height: 100%; border-radius: 6px; transition: width 0.3s; }
+
+        /* 立项平台按钮：信誉色调与锁定态 */
+        .select-btn .btn-cost.good { color: var(--accent-neon); }
+        .select-btn .btn-cost.warn { color: var(--accent-yellow); }
+        .select-btn .btn-cost.risk { color: var(--accent-pink); }
+        .select-btn.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(0.5); border-color: rgba(239,68,68,0.4) !important; }
+
+        /* ── 创始人专长树 ── */
+        .founder-hero { display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; margin-bottom: 1.2rem; padding: 1rem 1.2rem; }
+        .founder-hero-main { flex: 1; }
+        .founder-hero-level { font-family: var(--font-title); font-weight: 900; font-size: 1.2rem; color: #fff; }
+        .founder-xp-track { height: 8px; background: rgba(255,255,255,0.08); border-radius: 8px; overflow: hidden; margin: 0.5rem 0 0.3rem; }
+        .founder-xp-bar { height: 100%; background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink)); border-radius: 8px; transition: width 0.3s; }
+        .founder-xp-text { font-size: 0.76rem; color: var(--text-secondary); }
+        .founder-hero-tp { text-align: center; padding-left: 1.2rem; border-left: 1px solid rgba(255,255,255,0.08); }
+        .founder-tp-label { display: block; font-size: 0.72rem; color: var(--text-secondary); }
+        .founder-tp-val { font-family: var(--font-title); font-weight: 900; font-size: 1.8rem; color: var(--accent-yellow); }
+
+        .founder-talents { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+        .talent-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 1rem; display: flex; flex-direction: column; gap: 0.55rem; }
+        .talent-head { display: flex; align-items: center; gap: 0.7rem; }
+        .talent-icon { font-size: 1.6rem; width: 36px; text-align: center; }
+        .talent-titles { display: flex; flex-direction: column; gap: 0.25rem; }
+        .talent-name { font-weight: 800; color: #fff; font-size: 0.95rem; }
+        .talent-type { font-size: 0.66rem; padding: 0.05rem 0.4rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: var(--text-secondary); margin-left: 0.2rem; }
+        .talent-pips { display: flex; gap: 0.3rem; }
+        .talent-pip { width: 14px; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); }
+        .talent-pip.on { background: var(--pip, var(--accent-neon)); box-shadow: 0 0 6px var(--pip, var(--accent-neon)); }
+        .talent-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45; margin: 0; }
+        .talent-level-desc { font-size: 0.78rem; color: var(--text-primary); line-height: 1.4; margin: 0; }
+        .talent-actions { display: flex; gap: 0.5rem; margin-top: auto; }
+        .talent-up-btn { flex: 1; padding: 0.5rem; border-radius: 9px; border: 1px solid rgba(0,240,255,0.35); background: rgba(0,240,255,0.08); color: var(--accent-neon); font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .talent-up-btn:hover:not(:disabled) { background: rgba(0,240,255,0.2); }
+        .talent-up-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .talent-active-btn { flex: 1; padding: 0.5rem; border-radius: 9px; border: 1px solid rgba(217,70,239,0.4); background: rgba(217,70,239,0.1); color: var(--accent-pink); font-weight: 700; font-size: 0.8rem; cursor: pointer; }
+        .talent-active-btn.ready { animation: stageup-btn-pulse 1.3s infinite; }
+        .talent-active-btn.armed { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+        .talent-active-btn:disabled { cursor: default; }
+
+/* 性格标签 */
+.trait-badge.archetype { background: rgba(124, 92, 255, 0.18); color: #b9a8ff; border: 1px solid rgba(124,92,255,0.4); }
+/* 谈薪报价行 */
+#interview-choices .haggle-row { display:flex; gap:0.5rem; align-items:center; justify-content:space-between; width:100%; }
+#interview-choices .haggle-note { font-size:0.8rem; opacity:0.8; margin:0.2rem 0 0.4rem; }
+
+/* ===== 发行评分揭晓仪式 ===== */
