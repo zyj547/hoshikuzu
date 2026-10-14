@@ -4,13 +4,13 @@
 @import url("./simulator/00-foundation.css?v=1");
 
 /* office overview and desks */
-@import url("./simulator/10-office.css?v=8");
+@import url("./simulator/10-office.css?v=10");
 
 /* new game development setup */
 @import url("./simulator/20-development.css?v=1");
 
 /* staff hiring and detail modal */
-@import url("./simulator/30-hiring.css?v=3");
+@import url("./simulator/30-hiring.css?v=4");
 
 /* research tree */
 @import url("./simulator/40-research.css?v=1");

@@ -38,6 +38,9 @@ function refreshActiveScreen() {
     // 办公室卡座内容只在玩家操作后变化（招募/培训/专精时已各自重绘），
     // 无需每周全量重建——避免重置 3D 悬停态、滚动位置和不必要的重排。
     // 历史发布榜仅当仍有在售游戏（营收逐周增长）时才需要刷新。
+    if (screenId === "office" && typeof renderOfficeTheater === "function") {
+        renderOfficeTheater(gameState);
+    }
     if (screenId === "history" && !document.getElementById("tab-history-chronicle")?.classList.contains("active") && gameState.releases.some(g => g.weeksSinceRelease < 16)) {
         loadHistoryReleases();
     }

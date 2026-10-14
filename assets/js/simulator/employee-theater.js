@@ -57,6 +57,63 @@
         return (date.year || 1) * 100 + (date.month || 1) * 10 + (date.week || 1);
     }
 
+    function theaterSeed(gameState) {
+        const project = gameState && gameState.currentProject ? gameState.currentProject : {};
+        const staffSignal = (gameState && Array.isArray(gameState.employees) ? gameState.employees : [])
+            .map(emp => `${emp.name || ""}:${emp.statusText || ""}:${Math.round(emp.satisfaction || 0)}:${Math.round(emp.fatigue || 0)}`)
+            .join("|");
+        return [
+            dateSeed(gameState),
+            project.name || "",
+            project.state || "idle",
+            project.cardsResolved || 0,
+            project.progress || 0,
+            staffSignal
+        ].join("#");
+    }
+
+    function hashString(text) {
+        let hash = 0;
+        const str = String(text == null ? "" : text);
+        for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+        return Math.abs(hash);
+    }
+
+    function beatIdentity(beat) {
+        const people = (beat.people || []).map(getName).join("+");
+        return `${beat.type || "beat"}:${beat.title || ""}:${beat.meta || ""}:${people}`;
+    }
+
+    function selectTheaterBeats(gameState, beats, max = 4) {
+        const seed = theaterSeed(gameState);
+        const cache = gameState && gameState.officeTheaterCache;
+        if (cache && cache.seed === seed && Array.isArray(cache.beatKeys)) {
+            const cached = cache.beatKeys
+                .map(key => beats.find(beat => beatIdentity(beat) === key))
+                .filter(Boolean);
+            if (cached.length) return cached.slice(0, max);
+        }
+
+        const recent = gameState && Array.isArray(gameState.officeTheaterRecentKeys)
+            ? gameState.officeTheaterRecentKeys
+            : [];
+        const ranked = beats
+            .map((beat, index) => {
+                const key = beatIdentity(beat);
+                const staleBonus = recent.includes(key) ? 80 : 0;
+                const typeBonus = beat.type === "dialogue" ? -18 : beat.type === "action" ? -10 : 0;
+                return { beat, key, score: hashString(`${seed}:${key}:${index}`) + staleBonus + typeBonus };
+            })
+            .sort((a, b) => a.score - b.score);
+        const picked = ranked.slice(0, max).map(item => item.beat);
+        if (gameState) {
+            const pickedKeys = picked.map(beatIdentity);
+            gameState.officeTheaterCache = { seed, beatKeys: pickedKeys };
+            gameState.officeTheaterRecentKeys = pickedKeys.concat(recent).slice(0, 12);
+        }
+        return picked;
+    }
+
     function firstMember(members, predicate) {
         return members.find(emp => {
             ensure(emp);
@@ -240,13 +297,97 @@
             ));
         }
 
+        if (typeof root.employeeHeartKnot === "function" && typeof root.employeeMindLabel === "function") {
+            const knotEmp = members
+                .map(emp => {
+                    ensure(emp);
+                    if (typeof root.ensureEmployeePsychology === "function") root.ensureEmployeePsychology(emp);
+                    return emp;
+                })
+                .find(emp => emp.psychology && (emp.psychology.burnoutRisk >= 58 || emp.psychology.trustInFounder <= 38));
+            if (knotEmp) {
+                const knot = root.employeeHeartKnot(knotEmp);
+                const label = root.employeeMindLabel(knotEmp);
+                beats.push(makeAction(
+                    knot.title,
+                    label.tone === "risk" ? "risk" : "warn",
+                    "fa-solid fa-brain",
+                    [knotEmp],
+                    `${getName(knotEmp)} 没有直接抱怨，只把一句话留在了便签上：“${knot.need}”`,
+                    label.label
+                ));
+            }
+        }
+
+        if (typeof root.teamRelationshipBeats === "function") {
+            const rel = typeof root.teamRelationshipHighlights === "function"
+                ? root.teamRelationshipHighlights(gameState)[0]
+                : root.teamRelationshipBeats(gameState)[0];
+            if (rel) {
+                const role = rel.relation.role || "同事关系";
+                const tense = rel.relation.tension >= 58;
+                beats.push(makeDialogue(
+                    role,
+                    tense ? "warn" : "good",
+                    tense ? "fa-solid fa-bolt" : "fa-solid fa-people-arrows",
+                    [rel.a, rel.b],
+                    tense
+                        ? [
+                            { emp: rel.a, text: "我不是反对你，我是怕这个坑最后没人收。" },
+                            { emp: rel.b, text: "那我们先把坑画出来，别靠吵架定位。" }
+                        ]
+                        : [
+                            { emp: rel.a, text: "这块我能接一下，你先把你最担心的地方写下来。" },
+                            { emp: rel.b, text: "行，有你兜着我就敢往前推一点。" }
+                        ],
+                    tense ? "关系摩擦" : "关系升温"
+                ));
+            }
+        }
+
+        const week = gameState && gameState.date ? gameState.date.week || 1 : 1;
+        if (week === 4 && members.length) {
+            const payrollEmp = firstMember(members, emp => (emp.salary || 0) > 0) || members[0];
+            beats.push(makeAction(
+                "发薪日前夜",
+                "neutral",
+                "fa-solid fa-receipt",
+                [payrollEmp],
+                `${getName(payrollEmp)} 看了一眼工资条，又把任务板上最晚的那张卡片往前挪了一格。`,
+                "月底气氛"
+            ));
+        }
+
+        if (developing && gameState.currentProject && members.length) {
+            const project = gameState.currentProject;
+            const progress = Math.round(project.progress || 0);
+            const lead = members[hashString(`${project.name}:${project.cardsResolved || 0}`) % Math.max(1, members.length)];
+            beats.push(makeAction(
+                progress >= 70 ? "上线前的安静" : "项目白板更新",
+                progress >= 70 ? "warn" : "debug",
+                progress >= 70 ? "fa-solid fa-hourglass-half" : "fa-solid fa-note-sticky",
+                [lead],
+                progress >= 70
+                    ? `${getName(lead)} 把“还能不能再砍一点范围”写在白板最上面，大家突然都认真了。`
+                    : `《${project.name || "当前项目"}》的白板又多了三张便签：一个坑、一个想法，还有一个没人愿意承认的风险。`,
+                `进度 ${progress}%`
+            ));
+        }
+
+        if (!developing && members.length) {
+            const idleEmp = members[dateSeed(gameState) % members.length];
+            beats.push(makeAction(
+                "空窗期的声音",
+                "good",
+                "fa-solid fa-mug-saucer",
+                [idleEmp],
+                `${getName(idleEmp)} 把椅子转向窗边，说这周先别急着开新坑，上一款游戏还有东西值得复盘。`,
+                "复盘时间"
+            ));
+        }
+
         members.slice(0, 4).forEach(emp => beats.push(makeSolo(emp)));
-        const seed = dateSeed(gameState);
-        return beats
-            .map((beat, index) => ({ beat, score: ((index + 1) * 17 + seed) % 97 }))
-            .sort((a, b) => a.score - b.score)
-            .map(item => item.beat)
-            .slice(0, 4);
+        return selectTheaterBeats(gameState, beats, 4);
     }
 
     function employeeIndex(gameState, emp) {

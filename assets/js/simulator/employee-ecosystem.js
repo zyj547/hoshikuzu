@@ -82,6 +82,9 @@
             root.setEmployeeStatus(emp, status.text, status.tone);
             applyTraitMicroAction(emp, gameState, activeDevCount, rand);
         });
+        if (typeof root.tickEmployeePsychology === "function") root.tickEmployeePsychology(gameState, activeDevCount);
+        if (typeof root.tickEmployeeRelationships === "function") root.tickEmployeeRelationships(gameState, activeDevCount);
+        if (typeof root.tickEmployeeCareers === "function") root.tickEmployeeCareers(gameState, activeDevCount);
     }
 
     function employeeEfficiencyMoodMultiplier(emp) {

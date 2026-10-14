@@ -192,6 +192,14 @@
 
         .candidate-detail-card {
             width: min(560px, calc(100vw - 2rem));
+            max-height: min(86vh, 780px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding-bottom: 1rem;
+        }
+        .candidate-detail-card .event-title {
+            flex: 0 0 auto;
         }
         .candidate-detail-body {
             display: flex;
@@ -199,6 +207,24 @@
             gap: 1rem;
             text-align: left;
             margin-top: 0.8rem;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 0.35rem;
+            overscroll-behavior: contain;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 240, 255, 0.42) rgba(255,255,255,0.06);
+        }
+        .candidate-detail-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        .candidate-detail-body::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.055);
+            border-radius: 999px;
+        }
+        .candidate-detail-body::-webkit-scrollbar-thumb {
+            background: rgba(0, 240, 255, 0.38);
+            border-radius: 999px;
         }
         .candidate-detail-hero {
             display: grid;
@@ -290,11 +316,20 @@
         }
         .candidate-detail-note.employee-detail-note .employee-memory-list {
             margin-top: 0.5rem;
-            max-height: 220px;
+            max-height: 180px;
         }
         .candidate-detail-actions {
             grid-template-columns: 1fr 0.7fr;
-            margin-top: 1rem;
+            flex: 0 0 auto;
+            margin-top: 0.85rem;
+            padding-top: 0.85rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            background:
+                linear-gradient(180deg, rgba(15,18,36,0), rgba(15,18,36,0.86) 18%),
+                #0f1224;
+        }
+        .candidate-detail-actions .choice-btn {
+            min-height: 42px;
         }
         .choice-muted {
             border-color: rgba(255,255,255,0.18);

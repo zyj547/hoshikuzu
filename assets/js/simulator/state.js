@@ -178,6 +178,51 @@ function sanitizeStats(stats) {
     };
 }
 
+function sanitizeEmployeePsychology(psychology) {
+    if (!psychology || typeof psychology !== "object" || Array.isArray(psychology)) return null;
+    return {
+        ambition: clampInteger(psychology.ambition, 0, 100, 50),
+        securityNeed: clampInteger(psychology.securityNeed, 0, 100, 50),
+        creativeDrive: clampInteger(psychology.creativeDrive, 0, 100, 50),
+        trustInFounder: clampInteger(psychology.trustInFounder, 0, 100, 50),
+        burnoutRisk: clampInteger(psychology.burnoutRisk, 0, 100, 0),
+        knotKey: cleanText(psychology.knotKey, "", 40),
+        growthTags: Array.isArray(psychology.growthTags)
+            ? psychology.growthTags.slice(0, 8).map(tag => cleanText(tag, "", 24)).filter(Boolean)
+            : []
+    };
+}
+
+function sanitizeEmployeeCareer(career) {
+    if (!career || typeof career !== "object" || Array.isArray(career)) return null;
+    return {
+        pathKey: cleanText(career.pathKey, "", 40),
+        level: clampInteger(career.level, 1, 5, 1),
+        xp: clampInteger(career.xp, 0, 999999, 0),
+        title: cleanText(career.title, "", SAVE_LIMITS.text),
+        milestones: Array.isArray(career.milestones)
+            ? career.milestones.slice(-8).map(item => cleanText(item, "", SAVE_LIMITS.text)).filter(Boolean)
+            : []
+    };
+}
+
+function sanitizeEmployeeRelations(relations) {
+    if (!relations || typeof relations !== "object" || Array.isArray(relations)) return {};
+    return Object.keys(relations).slice(0, 10).reduce((acc, key) => {
+        const rel = relations[key];
+        if (!rel || typeof rel !== "object" || Array.isArray(rel)) return acc;
+        const cleanKey = cleanText(key, "", 60);
+        if (!cleanKey) return acc;
+        acc[cleanKey] = {
+            affinity: clampInteger(rel.affinity, 0, 100, 50),
+            respect: clampInteger(rel.respect, 0, 100, 50),
+            tension: clampInteger(rel.tension, 0, 100, 20),
+            role: cleanText(rel.role, "普通同事", 24)
+        };
+        return acc;
+    }, {});
+}
+
 function sanitizeEmployee(emp, fallback) {
     const source = emp && typeof emp === "object" ? emp : fallback;
     const clean = {
@@ -199,7 +244,7 @@ function sanitizeEmployee(emp, fallback) {
         statusText: cleanText(source.statusText, "整理今天的任务", SAVE_LIMITS.text),
         statusTone: enumValue(source.statusTone, ["neutral", "good", "warn", "risk", "debug", "idea"], "neutral"),
         storyFlags: source.storyFlags && typeof source.storyFlags === "object" && !Array.isArray(source.storyFlags)
-            ? Object.keys(source.storyFlags).slice(0, 20).reduce((acc, key) => {
+            ? Object.keys(source.storyFlags).slice(0, 40).reduce((acc, key) => {
                 acc[cleanText(key, "", 40)] = Boolean(source.storyFlags[key]);
                 return acc;
             }, {})
@@ -210,7 +255,10 @@ function sanitizeEmployee(emp, fallback) {
         })).filter(memory => memory.text) : [],
         contractWeeksLeft: source.contractWeeksLeft == null ? null : clampInteger(source.contractWeeksLeft, 0, 400, 96),
         contractYears: clampInteger(source.contractYears, 0, 3, 0),
-        pendingRenewal: Boolean(source.pendingRenewal)
+        pendingRenewal: Boolean(source.pendingRenewal),
+        psychology: sanitizeEmployeePsychology(source.psychology),
+        career: sanitizeEmployeeCareer(source.career),
+        relations: sanitizeEmployeeRelations(source.relations)
     };
     if (VALID_SPECIALTIES.includes(source.specialty)) {
         clean.specialty = source.specialty;

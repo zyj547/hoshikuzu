@@ -389,6 +389,7 @@ function trainEmployee(idx) {
 
     addChronicleEntry(`🎓 团队成员【${emp.name}】完成了高强度的专业技能培训，成功晋升至等级 Lv.${emp.level}！`);
     if (typeof addEmployeeMemory === "function") addEmployeeMemory(emp, `你为他安排了一次专业培训，他从 Lv.${oldLevel} 成长到 Lv.${emp.level}。`, gameState);
+    if (typeof addEmployeeCareerXp === "function") addEmployeeCareerXp(emp, 24 + emp.level * 2, "完成一次专业培训", gameState);
 
     saveGame();
     updateStatsUI();

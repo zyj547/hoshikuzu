@@ -221,6 +221,12 @@ function weeklyStep() {
     if (!interrupted && inSpaceWindow && typeof maybeTriggerEmployeeStoryline === "function" && maybeTriggerEmployeeStoryline(gameState)) {
         interrupted = true;
     }
+    if (!interrupted && inSpaceWindow && typeof maybeTriggerEmployeeRelationshipEvent === "function" && maybeTriggerEmployeeRelationshipEvent(gameState, Math.random)) {
+        interrupted = true;
+    }
+    if (!interrupted && inSpaceWindow && typeof maybeTriggerEmployeeCounseling === "function" && maybeTriggerEmployeeCounseling(gameState, Math.random)) {
+        interrupted = true;
+    }
     if (!interrupted && inSpaceWindow && Math.random() < BALANCE.randomEventChance) {
         triggerRandomEvent();
         interrupted = true;
@@ -238,6 +244,9 @@ function weeklyStep() {
     saveGame();
     updateStatsUI();
     refreshActiveScreen();
+    if (typeof renderOfficeTheater === "function" && document.getElementById("office-theater-list")) {
+        renderOfficeTheater(gameState);
+    }
     return interrupted;
 }
 

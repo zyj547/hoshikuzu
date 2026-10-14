@@ -337,6 +337,27 @@
             background: rgba(217,70,239,0.1);
             box-shadow: 0 0 12px rgba(217,70,239,0.12);
         }
+        .employee-mind-pill {
+            border-color: rgba(124,58,237,0.26);
+            color: #c084fc;
+            background: rgba(124,58,237,0.08);
+        }
+        .employee-mind-pill.good {
+            color: var(--accent-neon);
+            border-color: rgba(0,240,255,0.28);
+            background: rgba(0,240,255,0.075);
+        }
+        .employee-mind-pill.warn,
+        .employee-mind-pill.risk {
+            color: var(--accent-yellow);
+            border-color: rgba(251,191,36,0.34);
+            background: rgba(251,191,36,0.075);
+        }
+        .employee-mind-pill.idea {
+            color: var(--accent-pink);
+            border-color: rgba(217,70,239,0.32);
+            background: rgba(217,70,239,0.08);
+        }
 
         .staff-actions {
             grid-area: actions;
@@ -762,6 +783,279 @@
             border-color: rgba(0,240,255,0.18);
             background: rgba(0,240,255,0.055);
         }
+        .employee-psych-card {
+            margin-top: 0.9rem;
+            padding: 0.85rem;
+            border-radius: 14px;
+            border: 1px solid rgba(124,58,237,0.22);
+            background:
+                linear-gradient(135deg, rgba(124,58,237,0.08), rgba(0,240,255,0.035)),
+                rgba(5, 8, 18, 0.28);
+        }
+        .employee-psych-card.good { border-color: rgba(0,240,255,0.22); }
+        .employee-psych-card.warn,
+        .employee-psych-card.risk { border-color: rgba(251,191,36,0.32); }
+        .employee-psych-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            color: #fff;
+            font-weight: 900;
+            margin-bottom: 0.7rem;
+        }
+        .employee-psych-head span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.42rem;
+            min-width: 0;
+        }
+        .employee-psych-head i {
+            color: #c084fc;
+        }
+        .employee-psych-head b {
+            color: var(--accent-yellow);
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        .employee-psych-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.45rem;
+            margin-bottom: 0.75rem;
+        }
+        .employee-psych-grid div {
+            padding: 0.45rem 0.5rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .employee-psych-grid span {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.66rem;
+        }
+        .employee-psych-grid b {
+            display: block;
+            margin-top: 0.12rem;
+            color: #c084fc;
+            font-family: var(--font-title);
+            font-size: 0.92rem;
+        }
+        .employee-heart-knot {
+            padding: 0.65rem 0.7rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(0,0,0,0.18);
+        }
+        .employee-heart-knot strong {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 0.3rem;
+            font-size: 0.8rem;
+        }
+        .employee-heart-knot p {
+            margin: 0.22rem 0 0;
+            color: rgba(226,232,240,0.74);
+            font-size: 0.74rem;
+            line-height: 1.5;
+        }
+        .employee-heart-knot em {
+            color: var(--accent-neon);
+            font-style: normal;
+        }
+        .employee-growth-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.38rem;
+            margin-top: 0.65rem;
+        }
+        .employee-growth-tags span {
+            min-width: 0;
+            padding: 0.16rem 0.45rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.045);
+            color: var(--text-secondary);
+            font-size: 0.68rem;
+            font-weight: 800;
+        }
+        .career-badge {
+            --career-color: var(--accent-neon);
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.32rem;
+            max-width: 100%;
+            width: fit-content;
+            padding: 0.16rem 0.45rem;
+            border-radius: 999px;
+            border: 1px solid color-mix(in srgb, var(--career-color) 72%, transparent);
+            background: color-mix(in srgb, var(--career-color) 12%, transparent);
+            color: var(--career-color);
+            font-size: 0.68rem;
+            font-weight: 900;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .employee-career-card {
+            --career-color: var(--accent-neon);
+            margin-top: 0.9rem;
+            padding: 0.85rem;
+            border-radius: 14px;
+            border: 1px solid color-mix(in srgb, var(--career-color) 24%, transparent);
+            background:
+                linear-gradient(135deg, color-mix(in srgb, var(--career-color) 9%, transparent), rgba(0,0,0,0.12)),
+                rgba(5,8,18,0.28);
+        }
+        .employee-career-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.65rem;
+        }
+        .employee-career-head span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.42rem;
+            color: var(--career-color);
+            font-weight: 900;
+            font-size: 0.82rem;
+        }
+        .employee-career-head b {
+            min-width: 0;
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            text-align: right;
+        }
+        .employee-career-track {
+            height: 8px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.07);
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.35);
+        }
+        .employee-career-track div {
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--career-color), var(--accent-pink));
+            box-shadow: 0 0 12px color-mix(in srgb, var(--career-color) 45%, transparent);
+        }
+        .employee-career-meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-top: 0.45rem;
+            color: rgba(203,213,225,0.8);
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+        .employee-career-milestones {
+            display: grid;
+            gap: 0.35rem;
+            margin: 0.7rem 0 0;
+            padding-left: 1rem;
+            color: rgba(226,232,240,0.74);
+            font-size: 0.74rem;
+            line-height: 1.45;
+        }
+        .employee-relations-card {
+            margin-top: 0.9rem;
+            padding: 0.85rem;
+            border-radius: 14px;
+            border: 1px solid rgba(0,240,255,0.16);
+            background:
+                linear-gradient(135deg, rgba(0,240,255,0.055), rgba(251,191,36,0.035)),
+                rgba(5,8,18,0.28);
+            display: grid;
+            gap: 0.65rem;
+        }
+        .employee-relations-card > strong {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            color: var(--accent-neon);
+            font-size: 0.82rem;
+        }
+        .employee-relation-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(150px, 0.7fr);
+            gap: 0.75rem;
+            align-items: stretch;
+            padding: 0.65rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(0,0,0,0.18);
+        }
+        .employee-relation-row.good,
+        .employee-relation-row.trust,
+        .employee-relation-row.warm {
+            border-color: rgba(0,240,255,0.17);
+        }
+        .employee-relation-row.warn,
+        .employee-relation-row.risk {
+            border-color: rgba(251,191,36,0.22);
+            background: rgba(251,191,36,0.035);
+        }
+        .employee-relation-row b {
+            display: block;
+            color: var(--text-primary);
+            font-size: 0.82rem;
+            margin-bottom: 0.16rem;
+        }
+        .employee-relation-row span {
+            color: var(--accent-yellow);
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+        .employee-relation-row p {
+            margin: 0.36rem 0 0;
+            color: rgba(226,232,240,0.72);
+            font-size: 0.72rem;
+            line-height: 1.42;
+        }
+        .employee-relation-bars {
+            display: grid;
+            gap: 0.32rem;
+            min-width: 0;
+        }
+        .employee-relation-bars span {
+            position: relative;
+            display: grid;
+            grid-template-columns: 2.7rem auto;
+            align-items: center;
+            gap: 0.45rem;
+            min-height: 1.2rem;
+            padding-right: 2.2rem;
+            color: var(--text-secondary);
+            font-size: 0.66rem;
+            overflow: hidden;
+        }
+        .employee-relation-bars span::after {
+            content: "";
+            height: 5px;
+            width: calc(var(--v) * 1%);
+            max-width: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--accent-neon), var(--accent-pink));
+            box-shadow: 0 0 10px rgba(0,240,255,0.22);
+        }
+        .employee-relation-bars i {
+            font-style: normal;
+            color: rgba(148,163,184,0.85);
+        }
+        .employee-relation-bars b {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-primary);
+            font-size: 0.68rem;
+            margin: 0;
+        }
         .muted-name {
             color: var(--text-secondary);
         }
@@ -867,6 +1161,16 @@
             background: rgba(0,0,0,0.18);
             cursor: pointer;
             transition: transform 0.18s, border-color 0.18s, background 0.18s;
+            animation: officeTheaterIn 0.32s ease-out both;
+        }
+
+        .office-theater-row:nth-child(2) { animation-delay: 0.035s; }
+        .office-theater-row:nth-child(3) { animation-delay: 0.07s; }
+        .office-theater-row:nth-child(4) { animation-delay: 0.105s; }
+
+        @keyframes officeTheaterIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .office-theater-row.dialogue {

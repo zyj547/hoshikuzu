@@ -54,6 +54,8 @@ function loadOfficeDesks() {
 
         if (emp) {
             if (typeof ensureEmployeeVitals === "function") ensureEmployeeVitals(emp);
+            if (typeof ensureEmployeePsychology === "function") ensureEmployeePsychology(emp);
+            if (typeof ensureEmployeeCareer === "function") ensureEmployeeCareer(emp);
             let iconClass = "fa-laptop-code";
             if (emp.role === "artist") iconClass = "fa-palette";
             if (emp.role === "designer") iconClass = "fa-lightbulb";
@@ -82,7 +84,9 @@ function loadOfficeDesks() {
             const loyalty = emp.loyalty == null ? (emp.id === "player" ? 100 : 55) : emp.loyalty;
             const efficiency = Math.round(employeeEfficiency(emp) * 100);
             const insightChipHtml = typeof employeeInsightChipHtml === "function" ? employeeInsightChipHtml(emp, gameState) : "";
+            const mindChipHtml = typeof employeeMindChipHtml === "function" ? employeeMindChipHtml(emp) : "";
             const isFounder = i === 0 || emp.id === "player";
+            const careerChipHtml = typeof careerBadgeHtml === "function" && !isFounder ? careerBadgeHtml(emp) : "";
             const salaryText = isFounder ? "创始人 · 不领薪" : `月薪 ¥${(emp.salary || 0).toLocaleString()}`;
             const fireButtonHtml = i === 0 || emp.id === "player"
                 ? `<div class="staff-founder-badge"><i class="fa-solid fa-crown"></i> 创始人</div>`
@@ -106,6 +110,7 @@ function loadOfficeDesks() {
                         </div>
                         <span class="staff-level">${roleNameText} · Lv.${emp.level}</span>
                         <span class="staff-payline">${salaryText}</span>
+                        ${careerChipHtml}
                         ${typeof employeeTagHtml === "function" ? employeeTagHtml(emp) : ""}
                     </div>
                 </div>
@@ -121,6 +126,7 @@ function loadOfficeDesks() {
                     <div class="condition-pill ${staffHealthTone(efficiency)}">效率 ${efficiency}%</div>
                     <div class="condition-pill ${typeof contractTone === "function" ? contractTone(emp) : "good"}">${typeof contractLabel === "function" ? contractLabel(emp) : ""}</div>
                     ${insightChipHtml}
+                    ${mindChipHtml}
                 </div>
                 <div class="staff-actions" data-card-action-zone>
                     <button type="button" class="btn-research staff-action-btn detail" data-employee-detail="${i}" onclick="openOfficeDeskDetail(${i}); return false;"><i class="fa-solid fa-id-card"></i> 详情</button>
@@ -184,6 +190,8 @@ function openOfficeDeskDetail(idx) {
     if (!emp || !modal || !title || !body || !action) return;
 
     if (typeof ensureEmployeeVitals === "function") ensureEmployeeVitals(emp);
+    if (typeof ensureEmployeePsychology === "function") ensureEmployeePsychology(emp);
+    if (typeof ensureEmployeeCareer === "function") ensureEmployeeCareer(emp);
     const roleMeta = typeof getCandidateRoleMeta === "function"
         ? getCandidateRoleMeta(emp.role)
         : { color: "var(--accent-neon)", name: "程序员", iconClass: "fa-laptop-code" };
@@ -198,6 +206,9 @@ function openOfficeDeskDetail(idx) {
     const archetypeText = typeof archetypeName === "function" ? archetypeName(emp) : "务实养家型";
     const memoryHtml = typeof employeeMemoryHtml === "function" ? employeeMemoryHtml(emp) : `<div class="memory-empty">还没有共同记忆。</div>`;
     const insightHtml = typeof employeeInsightHtml === "function" ? employeeInsightHtml(emp, gameState) : "";
+    const careerHtml = typeof employeeCareerHtml === "function" ? employeeCareerHtml(emp) : "";
+    const psychologyHtml = typeof employeePsychologyHtml === "function" ? employeePsychologyHtml(emp) : "";
+    const relationshipHtml = typeof employeeRelationshipHtml === "function" ? employeeRelationshipHtml(emp, gameState) : "";
     const storyHtml = typeof employeeStoryProgressHtml === "function" ? employeeStoryProgressHtml(emp) : "";
 
     title.innerHTML = `<i class="fa-solid ${roleMeta.iconClass}"></i> ${escapeHtml(emp.name)} · ${roleMeta.name}`;
@@ -232,6 +243,9 @@ function openOfficeDeskDetail(idx) {
             <div><span>状态</span><b>${escapeHtml(emp.statusText || "整理任务")}</b></div>
         </div>
         ${insightHtml}
+        ${careerHtml}
+        ${psychologyHtml}
+        ${relationshipHtml}
         ${storyHtml}
         <div class="candidate-detail-note employee-detail-note">
             <strong>共同记忆</strong>
